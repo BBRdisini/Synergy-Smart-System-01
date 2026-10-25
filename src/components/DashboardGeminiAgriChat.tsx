@@ -36,24 +36,32 @@ interface DashboardGeminiAgriChatProps {
   latestDiagnosis?: DiagnosisResult | null;
 }
 
-const STORAGE_KEY_CHAT = 'tanicerdas_dashboard_gemini_agri_chat_v4';
+const STORAGE_KEY_CHAT = 'tanicerdas_dashboard_gemini_agri_chat_v5_sync';
+const LEGACY_STORAGE_KEYS = [
+  'tanicerdas_dashboard_gemini_agri_chat_v1',
+  'tanicerdas_dashboard_gemini_agri_chat_v2',
+  'tanicerdas_dashboard_gemini_agri_chat_v3',
+  'tanicerdas_dashboard_gemini_agri_chat_v4',
+  'tanicerdas_gemini_agri_chat_v1',
+  'tanicerdas_gemini_agri_chat_v2',
+];
 
 const QUICK_AGRI_PROMPTS = [
   {
-    label: '🌾 Akar Padi & Obat Wereng',
-    prompt: 'Bosku, akar padi menghitam dan ada wereng di pangkal batang. Solusi tegas & pilihan merk obatnya apa saja?',
+    label: '🌾 Budidaya Padi Ketan',
+    prompt: 'Bantu saya tentang cara budidaya padi ketan yang benar (jarak tanam, pemupukan & pengairan) agar bulir bernas dan tidak rebah?',
   },
   {
-    label: '🥑🍊 Durian, Alpukat, Jeruk & Jambu',
+    label: '🐛 Obat Wereng & Sundep',
+    prompt: 'Bosku, padi saya diserang wereng coklat dan sundep penggerek batang. Berikan Opsi 1 & Opsi 2 bahan aktif beserta dosis tangki 16L!',
+  },
+  {
+    label: '🍃 Daun Kuning (Cek Gejala)',
+    prompt: 'Daun kuning pada tanaman saya, kira-kira penyebabnya apa saja Bosku?',
+  },
+  {
+    label: '🥑🍊 Durian, Alpukat & Jeruk',
     prompt: 'Bagaimana cara merawat pohon durian, alpukat, jeruk, dan jambu supaya cepat berbunga/berbuah lebat dan tidak rontok?',
-  },
-  {
-    label: '🌽🌶️ Jagung, Sayuran & Palawija',
-    prompt: 'Rekomendasi pupuk dan obat hama ulat/thrips/patek terbaik untuk tanaman jagung, cabai, sayuran, dan palawija?',
-  },
-  {
-    label: '🌸🪴 Bunga & Tanaman Hias',
-    prompt: 'Tips media tanam, pupuk pembungaan, dan obat kutu putih/jamur untuk tanaman bunga mawar, anggrek, bougenville & aglaonema?',
   },
 ];
 
@@ -85,19 +93,19 @@ export const DashboardGeminiAgriChat: React.FC<DashboardGeminiAgriChatProps> = (
       modelBadge: 'Gemini AI 3.8 Flash',
       text:
         `Halo **${shortName} / Bosku**! Salam tani cerdas & berkah selalu! 🌾🥑🍊🌸\n\n` +
-        `Kenalin, saya **Kang Tani AI (Powered by Gemini AI 3.8 Flash)** yang siap menjawab **cepat, cerdas, dan tepat** langsung dari Dashboard.\n\n` +
-        `📌 **Cakupan Konsultasi Tanaman Lengkap (100% Khusus Pertanian)**:\n` +
-        `• **Padi, Jagung & Palawija** (kedelai, kacang hijau, singkong, ubi, kentang)\n` +
-        `• **Sayuran** (cabai, bawang merah, tomat, terong, timun, kubis, sawi, kangkung)\n` +
-        `• **Tanaman Keras & Buah** (jambu, durian, jeruk, alpukat/alpokat, mangga, kelengkeng, kopi, sawit)\n` +
-        `• **Bunga & Tanaman Hias** (anggrek, mawar, bougenville, aglaonema, monstera, adenium, bonsai)\n` +
-        `• **Diagnosa Akar/Batang/Daun/Bunga/Buah, Pupuk & Multi-Merk Obat Pertanian**\n\n` +
-        `📍 *Konteks Lahan Aktif*: **${plotInfo}** · Suhu **${weather.tempC}°C** · Kelembapan **${weather.humidityPct}%**. Yuk tanya tanaman apa aja di bawah!`,
+        `Saya **Kang Tani AI (Gemini AI 3.8 Flash • Anti-Halusinasi & Sinkron Presisi)** siap menjawab **100% sesuai apa yang Bosku tanyakan**:\n` +
+        `• **Tanya Budidaya / Varietas** (padi ketan, jagung manis, cabai, durian, alpukat, jeruk, jambu, bunga hias): Langsung dibahas karakteristik, jarak tanam, pupuk & pengairannya.\n` +
+        `• **Tanya Hama / Penyakit**: Langsung dibahas penyebab + **Opsi 1 & Opsi 2 Bahan Aktif resmi Kementan RI** (lengkap dosis per tangki 16L) + solusi hayati.\n` +
+        `• **Gejala Masih Umum** (misal *"daun kuning"*): Akan saya rinci 2–3 kemungkinan lapangan untuk konfirmasi fisik.\n\n` +
+        `📍 *Konteks Lahan*: **${plotInfo}** · Suhu **${weather.tempC}°C** · Kelembapan **${weather.humidityPct}%**. Silakan ketik pertanyaan Bosku di bawah!`,
     };
   };
 
   const [messages, setMessages] = useState<ChatMessageItem[]>(() => {
     try {
+      for (const oldKey of LEGACY_STORAGE_KEYS) {
+        localStorage.removeItem(oldKey);
+      }
       const raw = localStorage.getItem(STORAGE_KEY_CHAT);
       if (raw) {
         const parsed = JSON.parse(raw);

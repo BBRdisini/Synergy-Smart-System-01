@@ -914,11 +914,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Hero Row: Weather Card + Active Crop Hero Card (Screen 3) */}
+              {/* Hero Row: Live Weather Card (Full Width on Dashboard) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-                {/* Weather Summary Card matching Screen 3 — Synchronized with Live Open-Meteo & BMKG */}
+                {/* Weather Summary Card — Synchronized with Live Open-Meteo & BMKG */}
                 <div
-                  className="lg:col-span-5 rounded-2xl bg-white p-5 border border-slate-200 flex flex-col justify-between"
+                  className="lg:col-span-12 rounded-2xl bg-white p-5 border border-slate-200 flex flex-col justify-between"
                   data-testid="beranda-live-weather-card"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -1062,55 +1062,6 @@ export default function App() {
                     </div>
                   )}
                 </div>
-
-                {/* Active Crop Hero Card matching Screen 3 */}
-                <div className="lg:col-span-7 relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#14532D] via-[#15803D] to-[#16A34A] text-white p-5 flex flex-col justify-between shadow-md">
-                  <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <span className="text-xs font-medium text-[#DCFCE7]">
-                        Lahan Aktif Utama · {primaryPlot?.name || 'Lahan 1'} ({primaryPlot?.areaHa || 1.2} Ha)
-                      </span>
-                      <h2 className="text-2xl font-bold text-white mt-1">
-                        Tanaman {primaryPlot?.commodity || 'Padi'} ({primaryPlot?.variety || 'Ciherang'})
-                      </h2>
-                      <p className="text-sm font-medium text-[#DCFCE7] mt-0.5 tabular-nums">
-                        Fase: {primaryPlot?.currentPhaseName || 'Vegetatif (20 HST)'} · Estimasi Panen:{' '}
-                        {primaryPlot ? formatIndonesianDate(primaryPlot.estimatedHarvestDate) : '11 Jul 2025'}
-                      </p>
-                    </div>
-
-                    <CropThumbnailIllustration
-                      commodity={primaryPlot?.commodity || 'Padi'}
-                      className="w-16 h-16 rounded-2xl border-2 border-white/30 shrink-0"
-                    />
-                  </div>
-
-                  <div className="relative z-10 mt-5 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOpenSeasonWizardDirectly(false);
-                          setActiveTab('budidaya');
-                        }}
-                        className="h-10 px-4 rounded-xl bg-white text-[#14532D] hover:bg-[#DCFCE7] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        Siklus Budidaya Padi 14 Tahap
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('lahan')}
-                        className="h-10 px-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        Detail Lahan
-                      </button>
-                    </div>
-
-                    <span className="text-xs text-[#DCFCE7] tabular-nums">
-                      Total {plots.length} Lahan ({totalAreaHa} Ha)
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* 4 Quick Action Buttons matching Screen 3 */}
@@ -1178,7 +1129,7 @@ export default function App() {
                 </button>
               </div>
 
-              {/* EMBEDDED GEMINI (3.8 FLASH • ARGON) AGRICULTURAL ASSISTANT ON DASHBOARD */}
+              {/* EMBEDDED GEMINI AI 3.8 FLASH AGRICULTURAL ASSISTANT ON DASHBOARD */}
               <DashboardGeminiAgriChat
                 user={user}
                 primaryPlot={primaryPlot}
@@ -1215,7 +1166,7 @@ export default function App() {
                     <div>
                       <h2 className="text-base font-bold text-[#17231B]">Agenda Hari Ini</h2>
                       <p className="text-xs text-[#647067]">
-                        Klik kegiatan untuk menandai selesai
+                        Klik kegiatan untuk menandai selesai · Terhubung Google Calendar
                       </p>
                     </div>
                     <span className="text-xs font-semibold text-[#15803D] tabular-nums">
@@ -1271,13 +1222,24 @@ export default function App() {
                     ))}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('agenda')}
-                    className="w-full h-10 rounded-xl bg-[#F7FAF7] hover:bg-slate-100 text-xs font-semibold text-[#15803D] transition-colors cursor-pointer"
-                  >
-                    Buka Seluruh Kalender Tanam →
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('agenda')}
+                      className="w-full h-10 rounded-xl bg-[#F7FAF7] hover:bg-slate-100 text-xs font-semibold text-[#15803D] transition-colors cursor-pointer"
+                    >
+                      Buka Kalender Tanam →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('agenda')}
+                      data-testid="btn-dashboard-open-google-calendar"
+                      className="w-full h-10 rounded-xl bg-[#DCFCE7] hover:bg-[#BBF7D0] text-xs font-bold text-[#14532D] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Calendar className="h-3.5 w-3.5 text-[#15803D]" />
+                      <span>Sinkron Google Calendar</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Right Column: Latest AI Diagnosis Highlight + Financial Summary */}

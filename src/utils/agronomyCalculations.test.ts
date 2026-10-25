@@ -20,6 +20,8 @@ import {
   VERIFIED_PESTICIDE_PRODUCTS,
 } from '../data/agronomyDatabase';
 import {
+  AGRI_SYSTEM_INSTRUCTION,
+  GEMINI_AGRI_GENERATION_CONFIG,
   classifyAgriChatTopic,
   buildAgriRefusalReply,
   buildSmartAgriFallbackReply,
@@ -630,6 +632,30 @@ test('Gemini agriChatHelper strictly allows all plant & agricultural queries (pa
   assert.ok(camReply.includes('Analisis Kamera Gemini AI 3.8 Flash'));
   assert.ok(camReply.includes(rootDiag.detectedName));
   assert.ok(!camReply.toLowerCase().includes('argon'));
+
+  // 7. AGRI_SYSTEM_INSTRUCTION and GEMINI_AGRI_GENERATION_CONFIG follow anti-hallucination & synchronization rules
+  assert.ok(AGRI_SYSTEM_INSTRUCTION.includes('AKURAT, NYATA, DAN ANTI-HALUSINASI'));
+  assert.ok(AGRI_SYSTEM_INSTRUCTION.includes('Opsi 1'));
+  assert.ok(AGRI_SYSTEM_INSTRUCTION.includes('Opsi 2'));
+  assert.equal(GEMINI_AGRI_GENERATION_CONFIG.temperature, 0.3);
+  assert.equal(GEMINI_AGRI_GENERATION_CONFIG.topP, 0.85);
+
+  // 8. Question-to-Answer Synchronization: "bantu saya tentang padi ketan" answers Padi Ketan cultivation directly without generic organ inspection template
+  const ketanReply = buildSmartAgriFallbackReply('bantu saya tentang padi ketan', {
+    farmerName: 'Pak Budi Santoso',
+  });
+  assert.ok(ketanReply.includes('Padi Ketan'));
+  assert.ok(ketanReply.includes('Jarak Tanam'));
+  assert.ok(!ketanReply.includes('Langkah Cek Cepat Organ Tanaman'));
+
+  // 9. Ambiguous symptom ("daun kuning") lists 2-3 possibilities and asks for physical confirmation
+  const yellowLeafReply = buildSmartAgriFallbackReply('daun kuning', {
+    farmerName: 'Pak Budi Santoso',
+  });
+  assert.ok(yellowLeafReply.includes('Kemungkinan 1'));
+  assert.ok(yellowLeafReply.includes('Kemungkinan 2'));
+  assert.ok(yellowLeafReply.includes('Kemungkinan 3'));
+  assert.ok(yellowLeafReply.includes('Konfirmasi Ciri Fisik'));
 });
 
 

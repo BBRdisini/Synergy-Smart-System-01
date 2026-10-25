@@ -28,6 +28,8 @@ import {
   reverseGeocodeLocationName,
 } from './src/services/liveWeatherService';
 import {
+  AGRI_SYSTEM_INSTRUCTION,
+  GEMINI_AGRI_GENERATION_CONFIG,
   classifyAgriChatTopic,
   buildAgriRefusalReply,
   buildSmartAgriFallbackReply,
@@ -630,23 +632,9 @@ Jelaskan bukti gejala pada organ ${contextualResult.plantPart}, minimal 3 piliha
       });
     }
 
-    const systemInstruction = `Anda adalah "Kang Tani AI", asisten kecerdasan buatan yang ditenagai oleh ${modelLabel} di aplikasi TaniCerdas AI (baik di Dashboard maupun di Kamera AI) untuk petani dan pecinta tanaman di Indonesia.
+    const systemInstruction = `${AGRI_SYSTEM_INSTRUCTION}
 
-ATURAN WAJIB & MUTLAK (GUARDRAIL KHUSUS PERTANIAN & TANAMAN):
-1. HANYA TENTANG PERTANIAN & TANAMAN: Anda HANYA BOLEH menjawab pertanyaan seputar dunia pertanian dan tanaman secara menyeluruh, meliputi:
-   - Tanaman Pangan & Palawija: Padi, jagung, kedelai, kacang hijau, kacang tanah, singkong/ubi kayu, ubi jalar, kentang, porang, sorgum.
-   - Sayuran (Hortikultura): Cabai (rawit/keriting/besar), bawang merah, bawang putih, tomat, terong, timun, kubis/kol, sawi, pakcoy, bayam, kangkung, buncis, wortel, seledri, selada, brokoli, jamur.
-   - Buah-buahan & Tanaman Keras / Tahunan: Jambu (jambu kristal, jambu air, jambu biji), durian (musang king, bawor, montong, lokal), jeruk (keprok, manis, nipis, lemon, pamelo), alpukat / alpokat (miki, aligator, mentega, hass), mangga, kelengkeng, rambutan, pepaya, pisang, melon, semangka, nanas, manggis, nangka, anggur, kelapa, sawit, karet, kopi, kakao/cokelat, cengkeh, lada, pala, vanili, tebu, jati, sengon.
-   - Bunga-bungaan & Tanaman Hias (Florikultura): Anggrek, mawar, melati, krisan, aglaonema, monstera, anthurium (gelombang cinta), keladi, bougenville (bunga kertas), adenium (kamboja), sukulen, kaktus, bonsai, pucuk merah, lidah mertua, philodendron, dan tanaman taman/pot.
-   - Budidaya & Sarana Produksi: Kesehatan akar, batang, cabang, daun, bunga/malai, buah/gabah; media tanam, tanah & pH; pupuk (Urea, NPK, MKP, KNO3, Kalsium, Boron, organik, hayati); ZPT/perangsang bunga & buah; cangkok, stek, okulasi, sambung pucuk, pemangkasan (pruning); hama & penyakit tanaman (OPT); obat pertanian (insektisida, fungisida, bakterisida, akarisida, herbisida); irigasi & cuaca pertanian.
-2. TOLAK TEGAS SELAIN PERTANIAN/TANAMAN: Jika pengguna bertanya di luar topik pertanian/tanaman (politik, gosip artis, game, kripto, saham, matematika umum, koding, dll.), Anda WAJIB MENOLAK dengan bahasa yang baik, tegas, ramah, gaul, dan bersahabat, lalu ajak kembali membahas tanaman/pertanian.
-3. JAWABAN CERDAS, CEPAT, TEPAT & BERSAHABAT:
-   - Berikan jawaban yang langsung ke inti permasalahan (to-the-point, terstruktur, cerdas, dan akurat secara agronomi).
-   - Gunakan Bahasa Indonesia yang baik, tegas pada fakta ilmiah/dosis, ramah, gaul, dan bersahabat ("Siap Bosku", "Sobat Tani").
-4. REKOMENDASI OBAT MULTI-BAHAN AKTIF & MULTI-MERK DAGANG:
-   - Setiap kali membahas pengendalian hama/penyakit/jamur/bakteri, berikan minimal 2-3 pilihan Bahan Aktif beserta beberapa contoh Merk Dagang populer di Indonesia serta dosis aplikasinya.
-
-Konteks Lahan & Hasil Kamera AI Petani Saat Ini:
+Konteks Lahan Aktif & Cuaca Live Petani Saat Ini (Gunakan hanya jika relevan dengan pertanyaan petani):
 ${JSON.stringify(farmContext || {}, null, 2)}`;
 
     const historyText = Array.isArray(chatHistory) && chatHistory.length > 0
@@ -657,7 +645,7 @@ ${JSON.stringify(farmContext || {}, null, 2)}`;
       : '';
 
     const fullPrompt = historyText
-      ? `Riwayat Obrolan Sesi Ini:\n${historyText}\n\nPertanyaan Petani Terbaru: ${message}`
+      ? `Riwayat Obrolan Sesi Ini:\n${historyText}\n\nPertanyaan Petani Terbaru (JAWAB HANYA APA YANG DITANYAKAN SECARA SINKRON & ANTI-HALUSINASI): ${message}`
       : message;
 
     const modelCascade = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
@@ -670,10 +658,11 @@ ${JSON.stringify(farmContext || {}, null, 2)}`;
             contents: fullPrompt,
             config: {
               systemInstruction,
-              temperature: 0.35,
+              temperature: GEMINI_AGRI_GENERATION_CONFIG.temperature,
+              topP: GEMINI_AGRI_GENERATION_CONFIG.topP,
             },
           }),
-          3000
+          3500
         );
 
         if (response?.text && response.text.trim().length > 0) {

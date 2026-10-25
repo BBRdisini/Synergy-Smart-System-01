@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   Bell,
+  Calendar as CalendarIcon,
   CheckCircle2,
   Circle,
   CloudRain,
   CloudSun,
   Compass,
   Droplets,
+  ExternalLink,
+  LogOut,
   MapPin,
   Navigation,
   Plus,
@@ -15,6 +18,7 @@ import {
   ShieldCheck,
   Search,
   Sun,
+  Trash2,
   Wind,
   X,
 } from 'lucide-react';
@@ -30,6 +34,16 @@ import {
   BMKG_ADMIN_REGION_PRESETS,
   searchIndonesianLocationCoordinates,
 } from '../services/liveWeatherService';
+import {
+  GoogleCalendarEventItem,
+  initAuth,
+  googleSignIn,
+  logout as googleLogout,
+  listGoogleCalendarEvents,
+  createGoogleCalendarEvent,
+  syncFarmTasksToGoogleCalendar,
+  deleteGoogleCalendarEvent,
+} from '../services/googleCalendarService';
 
 interface CalendarAndWeatherViewProps {
   plots: FarmPlot[];
@@ -218,8 +232,392 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
     }
   };
 
+  // ============================================================================
+  // GOOGLE CALENDAR WORKSPACE OAUTH 2.0 STATE & MANDATORY CONFIRMATION MODAL
+  // ============================================================================
+  const [gcalUser, setGcalUser] = useState<{
+    email: string | null;
+    displayName: string | null;
+  } | null>(null);
+  const [needsGoogleAuth, setNeedsGoogleAuth] = useState<boolean>(true);
+  const [gcalEvents, setGcalEvents] = useState<GoogleCalendarEventItem[]>([]);
+  const [isLoadingGcal, setIsLoadingGcal] = useState<boolean>(false);
+  const [gcalStatusMsg, setGcalStatusMsg] = useState<string | null>(null);
+  const [gcalErrorMsg, setGcalErrorMsg] = useState<string | null>(null);
+
+  // Confirmation modal state for mutating/destructive Google Calendar API operations
+  const [pendingGcalAction, setPendingGcalAction] = useState<
+    | {
+        type: 'sync-tasks';
+        tasksToSync: ScheduledTask[];
+      }
+    | {
+        type: 'create-single';
+        summary: string;
+        description: string;
+        isoDate: string;
+        timeSlot: string;
+      }
+    | {
+        type: 'delete-event';
+        eventId: string;
+        eventSummary: string;
+      }
+    | null
+  >(null);
+
+  const fetchUpcomingGoogleEvents = async () => {
+    setIsLoadingGcal(true);
+    setGcalErrorMsg(null);
+    try {
+      const items = await listGoogleCalendarEvents(12);
+      setGcalEvents(items);
+      setNeedsGoogleAuth(false);
+    } catch (err: any) {
+      if (err?.message === 'AUTH_REQUIRED') {
+        setNeedsGoogleAuth(true);
+      } else {
+        setGcalErrorMsg(err?.message || 'Gagal memuat jadwal dari Google Calendar.');
+      }
+    } finally {
+      setIsLoadingGcal(false);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = initAuth((firebaseUser) => {
+      if (firebaseUser) {
+        setGcalUser({
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+        });
+        fetchUpcomingGoogleEvents();
+      } else {
+        setGcalUser(null);
+        setNeedsGoogleAuth(true);
+        setGcalEvents([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleCalendarSignIn = async () => {
+    setGcalErrorMsg(null);
+    setGcalStatusMsg(null);
+    setIsLoadingGcal(true);
+    try {
+      await googleSignIn();
+      setNeedsGoogleAuth(false);
+      await fetchUpcomingGoogleEvents();
+      setGcalStatusMsg('Berhasil terhubung ke Google Calendar! Jadwal siap disinkronkan.');
+    } catch (err: any) {
+      setGcalErrorMsg(
+        err?.message ||
+          'Gagal masuk dengan akun Google. Pastikan jendela pop-up diizinkan di browser Anda.'
+      );
+    } finally {
+      setIsLoadingGcal(false);
+    }
+  };
+
+  const handleGoogleCalendarSignOut = async () => {
+    await googleLogout();
+    setGcalUser(null);
+    setNeedsGoogleAuth(true);
+    setGcalEvents([]);
+    setGcalStatusMsg('Akun Google Calendar telah diputuskan.');
+  };
+
+  const requestSyncTasksConfirmation = () => {
+    setGcalErrorMsg(null);
+    setGcalStatusMsg(null);
+    const pendingTasks = filteredTasks.filter((t) => !t.completed);
+    if (pendingTasks.length === 0) {
+      setGcalErrorMsg('Tidak ada jadwal kegiatan belum selesai untuk disinkronkan.');
+      return;
+    }
+    setPendingGcalAction({
+      type: 'sync-tasks',
+      tasksToSync: pendingTasks,
+    });
+  };
+
+  const requestSingleTaskToGcalConfirmation = (task: ScheduledTask) => {
+    setGcalErrorMsg(null);
+    setGcalStatusMsg(null);
+    setPendingGcalAction({
+      type: 'create-single',
+      summary: `[TaniCerdas - ${task.commodity}] ${task.title} (${task.plotName})`,
+      description: `Kegiatan Budidaya: ${task.title}\nLahan: ${task.plotName} (${task.commodity})\nKategori: ${task.category}\nCatatan/Dosis: ${task.dosageOrNote || '-'}\nWaktu: ${task.dateLabel}`,
+      isoDate: task.isoDate,
+      timeSlot: task.timeSlot,
+    });
+  };
+
+  const requestDeleteGcalEventConfirmation = (ev: GoogleCalendarEventItem) => {
+    setGcalErrorMsg(null);
+    setGcalStatusMsg(null);
+    setPendingGcalAction({
+      type: 'delete-event',
+      eventId: ev.id,
+      eventSummary: ev.summary || 'Jadwal Pertanian',
+    });
+  };
+
+  const executeConfirmedGcalAction = async () => {
+    if (!pendingGcalAction) return;
+    const action = pendingGcalAction;
+    setPendingGcalAction(null);
+    setIsLoadingGcal(true);
+    setGcalErrorMsg(null);
+    setGcalStatusMsg(null);
+
+    try {
+      if (action.type === 'sync-tasks') {
+        const createdItems = await syncFarmTasksToGoogleCalendar(action.tasksToSync);
+        setGcalStatusMsg(
+          `Berhasil menyinkronkan ${createdItems.length} jadwal tanam ke Google Calendar utama Anda!`
+        );
+        await fetchUpcomingGoogleEvents();
+      } else if (action.type === 'create-single') {
+        const datePrefix =
+          action.isoDate && /^\d{4}-\d{2}-\d{2}$/.test(action.isoDate)
+            ? action.isoDate
+            : new Date().toISOString().slice(0, 10);
+        await createGoogleCalendarEvent({
+          summary: action.summary,
+          description: action.description,
+          location: activePlot?.name || 'Lahan Pertanian TaniCerdas',
+          isoDate: datePrefix,
+          timeSlot: action.timeSlot,
+        });
+        setGcalStatusMsg(`Acara "${action.summary}" berhasil ditambahkan ke Google Calendar!`);
+        await fetchUpcomingGoogleEvents();
+      } else if (action.type === 'delete-event') {
+        await deleteGoogleCalendarEvent(action.eventId);
+        setGcalStatusMsg(`Acara "${action.eventSummary}" berhasil dihapus dari Google Calendar.`);
+        await fetchUpcomingGoogleEvents();
+      }
+    } catch (err: any) {
+      if (err?.message === 'AUTH_REQUIRED') {
+        setNeedsGoogleAuth(true);
+        setGcalErrorMsg(
+          'Sesi token Google Calendar berakhir atau belum login. Silakan klik "Sign in with Google" terlebih dahulu.'
+        );
+      } else {
+        setGcalErrorMsg(err?.message || 'Gagal menjalankan aksi pada Google Calendar.');
+      }
+    } finally {
+      setIsLoadingGcal(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* GOOGLE CALENDAR WORKSPACE INTEGRATION CARD */}
+      <section
+        data-testid="google-calendar-integration-card"
+        className="rounded-2xl bg-white p-5 border-2 border-[#15803D]/25 shadow-xs space-y-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="h-12 w-12 rounded-2xl bg-[#F0FDF4] border border-[#15803D]/20 flex items-center justify-center shrink-0">
+              <CalendarIcon className="h-6 w-6 text-[#15803D]" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-[#17231B]">
+                  Integrasi Google Calendar Pertanian
+                </h2>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#DCFCE7] text-[#14532D] text-[11px] font-bold">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#15803D]" />
+                  Google Workspace OAuth 2.0
+                </span>
+              </div>
+              <p className="text-xs text-[#647067] mt-0.5">
+                Sinkronkan jadwal pemupukan, penyemprotan OPT, pengairan, dan estimasi panen langsung ke Google Calendar pribadi Anda (WIB).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {needsGoogleAuth ? (
+              <button
+                type="button"
+                onClick={handleGoogleCalendarSignIn}
+                disabled={isLoadingGcal}
+                data-testid="btn-google-calendar-signin"
+                className="flex items-center justify-center gap-3 bg-white text-gray-700 font-medium py-2.5 px-4 rounded-xl border border-gray-300 hover:bg-gray-50 transition-all shadow-xs cursor-pointer text-xs sm:text-sm"
+              >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                <span>{isLoadingGcal ? 'Menghubungkan...' : 'Sign in with Google'}</span>
+              </button>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                {gcalUser && (
+                  <span className="text-xs font-semibold text-[#14532D] bg-[#F0FDF4] border border-[#15803D]/25 px-3 py-1.5 rounded-xl">
+                    Terhubung: {gcalUser.email || gcalUser.displayName || 'Akun Google'}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={fetchUpcomingGoogleEvents}
+                  disabled={isLoadingGcal}
+                  className="h-9 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-[#17231B] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoadingGcal ? 'animate-spin' : ''}`} />
+                  <span>Muat Ulang Acara</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoogleCalendarSignOut}
+                  className="h-9 px-3 rounded-xl border border-rose-200 hover:bg-rose-50 text-xs font-semibold text-rose-700 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Keluar</span>
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={requestSyncTasksConfirmation}
+              disabled={isLoadingGcal}
+              data-testid="btn-sync-tasks-google-calendar"
+              className="h-10 px-4 rounded-xl bg-[#15803D] hover:bg-[#14532D] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <CalendarIcon className="h-4 w-4" />
+              <span>
+                Sinkronkan {filteredTasks.filter((t) => !t.completed).length} Jadwal Tanam ke Google Calendar
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {gcalStatusMsg && (
+          <div className="rounded-xl bg-[#DCFCE7] border border-[#15803D]/30 px-4 py-2.5 text-xs font-semibold text-[#14532D] flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-[#15803D] shrink-0" />
+              <span>{gcalStatusMsg}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setGcalStatusMsg(null)}
+              className="text-[#14532D] hover:underline text-[11px] font-bold cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        )}
+
+        {gcalErrorMsg && (
+          <div className="rounded-xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-semibold text-amber-950 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>{gcalErrorMsg}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setGcalErrorMsg(null)}
+              className="text-amber-900 hover:underline text-[11px] font-bold cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        )}
+
+        {/* Live Google Calendar Events List when signed in */}
+        {!needsGoogleAuth && (
+          <div className="pt-2 border-t border-slate-100 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#647067]">
+                Acara Mendatang di Google Calendar Anda ({gcalEvents.length})
+              </h3>
+              <span className="text-[11px] text-[#15803D] font-semibold">
+                Kalender Utama (primary) · Asia/Jakarta
+              </span>
+            </div>
+
+            {gcalEvents.length === 0 ? (
+              <div className="rounded-xl bg-[#F7FAF7] border border-slate-200 p-3.5 text-xs text-[#647067]">
+                Belum ada acara mendatang di Google Calendar Anda. Klik tombol{' '}
+                <strong>Sinkronkan Jadwal Tanam ke Google Calendar</strong> di atas untuk mengirim jadwal budidaya lahan Anda.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {gcalEvents.map((ev) => {
+                  const rawStart = ev.start?.dateTime || ev.start?.date || '';
+                  const formattedStart = rawStart
+                    ? new Date(rawStart).toLocaleString('id-ID', {
+                        dateStyle: 'medium',
+                        timeStyle: ev.start?.dateTime ? 'short' : undefined,
+                      })
+                    : 'Jadwal Aktif';
+                  return (
+                    <div
+                      key={ev.id}
+                      className="rounded-xl bg-[#F7FAF7] border border-slate-200 p-3 flex items-start justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#17231B] truncate">
+                          {ev.summary || '(Tanpa Judul)'}
+                        </div>
+                        <div className="text-[11px] text-[#15803D] font-medium mt-0.5 tabular-nums">
+                          {formattedStart}
+                        </div>
+                        {ev.description && (
+                          <p className="text-[11px] text-[#647067] mt-0.5 line-clamp-1">
+                            {ev.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {ev.htmlLink && (
+                          <a
+                            href={ev.htmlLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Buka di Google Calendar"
+                            className="p-1.5 rounded-lg bg-white border border-slate-200 text-[#15803D] hover:bg-[#DCFCE7]"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => requestDeleteGcalEventConfirmation(ev)}
+                          title="Hapus acara dari Google Calendar"
+                          className="p-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
       {/* Main 2-Column Split: Screen 8 (Kalender Tanam & Pengingat) + Screen 9 (Data Cuaca & Kondisi Lahan Live) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Screen 8 — Kalender Tanam & Jadwal Kegiatan */}
@@ -362,9 +760,23 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                     </div>
                   </div>
 
-                  <span className="text-xs font-medium text-[#647067] shrink-0">
-                    {task.completed ? 'Selesai' : 'Jadwal'}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestSingleTaskToGcalConfirmation(task);
+                      }}
+                      title="Tambahkan jadwal ini ke Google Calendar"
+                      className="px-2.5 py-1 rounded-lg bg-[#DCFCE7] hover:bg-[#BBF7D0] text-[#14532D] text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <CalendarIcon className="h-3 w-3 text-[#15803D]" />
+                      <span>+ GCal</span>
+                    </button>
+                    <span className="text-xs font-medium text-[#647067]">
+                      {task.completed ? 'Selesai' : 'Jadwal'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1038,6 +1450,135 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MANDATORY USER CONFIRMATION MODAL FOR GOOGLE CALENDAR MUTATING/DESTRUCTIVE ACTIONS */}
+      {pendingGcalAction && (
+        <div
+          data-testid="google-calendar-confirm-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Konfirmasi Perubahan Google Calendar"
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-xl bg-[#DCFCE7] text-[#15803D] flex items-center justify-center shrink-0">
+                  <CalendarIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#17231B]">
+                    Konfirmasi Aksi Google Calendar
+                  </h3>
+                  <p className="text-xs text-[#647067]">
+                    Tinjau detail jadwal sebelum mengubah data di Google Calendar Anda
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingGcalAction(null)}
+                aria-label="Tutup konfirmasi"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {pendingGcalAction.type === 'sync-tasks' && (
+              <div className="space-y-3 text-xs">
+                <p className="text-[#17231B] leading-relaxed">
+                  Anda akan menambahkan{' '}
+                  <strong>{pendingGcalAction.tasksToSync.length} jadwal kegiatan budidaya</strong>{' '}
+                  berikut ke kalender utama (<strong>primary</strong>) Google Calendar Anda:
+                </p>
+                <div className="rounded-xl bg-[#F7FAF7] border border-slate-200 p-3 max-h-48 overflow-y-auto space-y-2">
+                  {pendingGcalAction.tasksToSync.map((t) => (
+                    <div
+                      key={t.id}
+                      className="pb-2 last:pb-0 border-b last:border-b-0 border-slate-200/70"
+                    >
+                      <div className="font-bold text-[#17231B]">
+                        [{t.commodity}] {t.title} — {t.plotName}
+                      </div>
+                      <div className="text-[11px] text-[#15803D] tabular-nums">{t.dateLabel}</div>
+                      {t.dosageOrNote && (
+                        <div className="text-[11px] text-[#647067]">{t.dosageOrNote}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pendingGcalAction.type === 'create-single' && (
+              <div className="space-y-2.5 text-xs">
+                <p className="text-[#17231B]">
+                  Anda akan membuat acara baru di Google Calendar utama Anda dengan rincian:
+                </p>
+                <div className="rounded-xl bg-[#F7FAF7] border border-slate-200 p-3.5 space-y-1.5">
+                  <div>
+                    <span className="text-[#647067] block">Judul Acara:</span>
+                    <strong className="text-[#17231B]">{pendingGcalAction.summary}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[#647067] block">Tanggal & Jam (WIB):</span>
+                    <strong className="text-[#15803D] tabular-nums">
+                      {pendingGcalAction.isoDate} · {pendingGcalAction.timeSlot}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-[#647067] block">Deskripsi:</span>
+                    <p className="text-[#17231B] whitespace-pre-line">
+                      {pendingGcalAction.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {pendingGcalAction.type === 'delete-event' && (
+              <div className="space-y-2.5 text-xs">
+                <div className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-rose-950">
+                  <strong className="font-bold block mb-1">
+                    Peringatan Penghapusan Acara Google Calendar
+                  </strong>
+                  <p>
+                    Apakah Anda yakin ingin menghapus acara{' '}
+                    <strong>"{pendingGcalAction.eventSummary}"</strong> secara permanen dari Google
+                    Calendar Anda?
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setPendingGcalAction(null)}
+                data-testid="btn-cancel-gcal-confirm"
+                className="px-4 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-[#647067] cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={executeConfirmedGcalAction}
+                data-testid="btn-approve-gcal-confirm"
+                className={`px-4 h-10 rounded-xl text-white text-xs font-bold cursor-pointer ${
+                  pendingGcalAction.type === 'delete-event'
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-[#15803D] hover:bg-[#14532D]'
+                }`}
+              >
+                {pendingGcalAction.type === 'delete-event'
+                  ? 'Ya, Hapus dari Google Calendar'
+                  : 'Konfirmasi & Simpan ke Google Calendar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
