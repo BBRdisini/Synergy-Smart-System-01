@@ -1427,8 +1427,19 @@ export interface ImageColorStats {
 export function buildContextualDiagnosisResult(params: {
   commodity: CommodityType;
   plantPart: DiagnosisResult['plantPart'];
+  detectedPlantPartFromPhoto?: DiagnosisResult['plantPart'];
+  organSpecificAnatomyCheck?: string;
   symptomNotes?: string;
-  presetKey?: 'blas' | 'kresek' | 'bercak_coklat' | 'tungro' | 'wereng' | string;
+  presetKey?:
+    | 'blas'
+    | 'kresek'
+    | 'bercak_coklat'
+    | 'tungro'
+    | 'wereng'
+    | 'akar'
+    | 'hama_akar'
+    | 'malai_gabah'
+    | string;
   matchedDiseaseId?: OfficialDiseaseId | string;
   visualObservations?: string;
   confidenceScore?: number;
@@ -1443,6 +1454,8 @@ export function buildContextualDiagnosisResult(params: {
   const {
     commodity,
     plantPart,
+    detectedPlantPartFromPhoto,
+    organSpecificAnatomyCheck,
     symptomNotes = '',
     presetKey,
     matchedDiseaseId,
@@ -1455,30 +1468,204 @@ export function buildContextualDiagnosisResult(params: {
     aiModelUsed,
   } = params;
 
+  const effectivePlantPart = detectedPlantPartFromPhoto || plantPart;
+
   // 1. Jika Gemini Vision telah mengembalikan matchedDiseaseId, gunakan langsung sebagai sumber kebenaran utama
+  //    dengan verifikasi kesesuaian organ tanaman (agar foto Akar tidak pernah dianalisis sebagai Daun).
   if (matchedDiseaseId && matchedDiseaseId.trim().length > 0) {
     return buildDiagnosisFromMatchedDiseaseId({
       matchedDiseaseId,
       commodity,
-      plantPart,
+      plantPart: effectivePlantPart,
+      detectedPlantPartFromPhoto: effectivePlantPart,
+      organSpecificAnatomyCheck,
       visualObservations,
       confidenceScore,
       differentialReasoning,
       visibleSymptoms,
       plotId,
       plotName,
-      aiModelUsed: aiModelUsed || 'Multimodal Gemini Vision Fitopatologi',
+      aiModelUsed: aiModelUsed || 'Gemini AI 3.8 Flash (Multimodal Vision Fitopatologi)',
     });
   }
 
-  // 2. Pemetaan berbasis catatan gejala eksplisit petani atau tombol preset sampel uji
+  // 2. Pemetaan berbasis organ tanaman (Akar, Batang, Daun, Malai/Bunga, Buah/Gabah) & catatan gejala petani
   const notesLower = symptomNotes.toLowerCase().trim();
+
+  // Jika presetKey dipilih secara eksplisit dari tombol sampel
+  if (presetKey && !notesLower) {
+    const presetMap: Record<string, OfficialDiseaseId> = {
+      blas: 'blas_daun',
+      blas_daun: 'blas_daun',
+      kresek: 'kresek_hdb',
+      kresek_hdb: 'kresek_hdb',
+      bercak_coklat: 'bercak_coklat',
+      hawar_pelepah: 'hawar_pelepah',
+      bercak_coklat_sempit: 'bercak_coklat_sempit',
+      tungro: 'tungro',
+      hama_putih_palsu: 'hama_putih_palsu',
+      wereng: 'wereng_batang_coklat',
+      wereng_batang_coklat: 'wereng_batang_coklat',
+      sundep_beluk: 'sundep_beluk',
+      kahat_n: 'kahat_n',
+      kahat_k_fe: 'kahat_k_fe',
+      tanaman_sehat: 'tanaman_sehat',
+      akar: 'busuk_akar_keracunan_besi',
+      busuk_akar: 'busuk_akar_keracunan_besi',
+      busuk_akar_keracunan_besi: 'busuk_akar_keracunan_besi',
+      hama_akar: 'hama_akar_orong_nematoda',
+      hama_akar_orong_nematoda: 'hama_akar_orong_nematoda',
+      akar_sehat_optimal: 'akar_sehat_optimal',
+      malai_gabah: 'walang_sangit_gabah',
+      walang_sangit_gabah: 'walang_sangit_gabah',
+      blas_leher_malai: 'blas_leher_malai',
+      kotor_bulir_gabah: 'kotor_bulir_gabah',
+    };
+    const presetId = presetMap[presetKey];
+    if (presetId) {
+      return buildDiagnosisFromMatchedDiseaseId({
+        matchedDiseaseId: presetId,
+        commodity,
+        plantPart: effectivePlantPart,
+        detectedPlantPartFromPhoto: effectivePlantPart,
+        organSpecificAnatomyCheck,
+        visualObservations,
+        confidenceScore,
+        differentialReasoning,
+        visibleSymptoms,
+        plotId,
+        plotName,
+        aiModelUsed: aiModelUsed || 'Gemini AI 3.8 Flash (Basis Pakar Fitopatologi Kementan RI)',
+      });
+    }
+  }
+
+  // A. PRIORITAS ORGAN AKAR: Bila bagian tanaman adalah Akar ATAU catatan menyebut akar secara spesifik
+  if (
+    effectivePlantPart === 'Akar' ||
+    notesLower.includes('busuk akar') ||
+    notesLower.includes('akar hitam') ||
+    notesLower.includes('akar busuk') ||
+    notesLower.includes('akar putus') ||
+    notesLower.includes('orong') ||
+    notesLower.includes('anjing tanah') ||
+    notesLower.includes('uret') ||
+    notesLower.includes('nematoda') ||
+    notesLower.includes('puru akar') ||
+    notesLower.includes('bengkak akar')
+  ) {
+    let rootDiseaseId: OfficialDiseaseId = 'busuk_akar_keracunan_besi';
+    if (
+      notesLower.includes('orong') ||
+      notesLower.includes('anjing tanah') ||
+      notesLower.includes('uret') ||
+      notesLower.includes('nematoda') ||
+      notesLower.includes('puru') ||
+      notesLower.includes('bengkak') ||
+      notesLower.includes('putus') ||
+      notesLower.includes('hama akar') ||
+      notesLower.includes('ulat tanah') ||
+      presetKey === 'hama_akar'
+    ) {
+      rootDiseaseId = 'hama_akar_orong_nematoda';
+    } else if (
+      (notesLower.includes('sehat') || notesLower.includes('putih bersih') || notesLower.includes('normal')) &&
+      !notesLower.includes('busuk') &&
+      !notesLower.includes('hitam')
+    ) {
+      rootDiseaseId = 'akar_sehat_optimal';
+    }
+
+    return buildDiagnosisFromMatchedDiseaseId({
+      matchedDiseaseId: rootDiseaseId,
+      commodity,
+      plantPart: 'Akar',
+      detectedPlantPartFromPhoto: 'Akar',
+      organSpecificAnatomyCheck,
+      visualObservations:
+        visualObservations ||
+        (symptomNotes.trim()
+          ? `Analisis morfologi organ Akar ${commodity}: "${symptomNotes.trim()}". Fokus pemeriksaan pada serabut perakaran, warna permukaan akar (Fe²⁺/H₂S), dan keutuhan pangkal akar.`
+          : undefined),
+      confidenceScore,
+      differentialReasoning,
+      visibleSymptoms,
+      plotId,
+      plotName,
+      aiModelUsed: aiModelUsed || 'Gemini AI 3.8 Flash (Fisiologi Perakaran Kementan RI)',
+    });
+  }
+
+  // B. PRIORITAS ORGAN MALAI / BUNGA & BUAH / GABAH
+  if (
+    effectivePlantPart === 'Malai / Bunga' ||
+    effectivePlantPart === 'Buah / Gabah' ||
+    notesLower.includes('walang sangit') ||
+    notesLower.includes('blas leher') ||
+    notesLower.includes('patah leher') ||
+    notesLower.includes('gabah kotor') ||
+    notesLower.includes('bulir kotor')
+  ) {
+    let panicleDiseaseId: OfficialDiseaseId =
+      effectivePlantPart === 'Buah / Gabah' ? 'walang_sangit_gabah' : 'blas_leher_malai';
+
+    if (commodity === 'Cabai' || notesLower.includes('cabai') || notesLower.includes('patek') || notesLower.includes('antraknosa')) {
+      panicleDiseaseId = 'antraknosa_cabai';
+    } else if (
+      notesLower.includes('walang sangit') ||
+      notesLower.includes('hisap') ||
+      notesLower.includes('masak susu') ||
+      notesLower.includes('bercak tusukan') ||
+      presetKey === 'malai_gabah'
+    ) {
+      panicleDiseaseId = 'walang_sangit_gabah';
+    } else if (
+      notesLower.includes('blas leher') ||
+      notesLower.includes('patah leher') ||
+      notesLower.includes('leher malai') ||
+      notesLower.includes('neck blast')
+    ) {
+      panicleDiseaseId = 'blas_leher_malai';
+    } else if (
+      notesLower.includes('kotor') ||
+      notesLower.includes('hitam') ||
+      notesLower.includes('jamur gabah') ||
+      notesLower.includes('kusam')
+    ) {
+      panicleDiseaseId = 'kotor_bulir_gabah';
+    } else if (
+      notesLower.includes('beluk') ||
+      notesLower.includes('sundep') ||
+      notesLower.includes('penggerek') ||
+      notesLower.includes('malai putih') ||
+      notesLower.includes('dicabut')
+    ) {
+      panicleDiseaseId = 'sundep_beluk';
+    }
+
+    return buildDiagnosisFromMatchedDiseaseId({
+      matchedDiseaseId: panicleDiseaseId,
+      commodity,
+      plantPart: effectivePlantPart,
+      detectedPlantPartFromPhoto: effectivePlantPart,
+      organSpecificAnatomyCheck,
+      visualObservations:
+        visualObservations ||
+        (symptomNotes.trim()
+          ? `Analisis morfologi organ ${effectivePlantPart} ${commodity}: "${symptomNotes.trim()}".`
+          : undefined),
+      confidenceScore,
+      differentialReasoning,
+      visibleSymptoms,
+      plotId,
+      plotName,
+      aiModelUsed: aiModelUsed || 'Gemini AI 3.8 Flash (Basis Pakar Fitopatologi Kementan RI)',
+    });
+  }
+
+  // C. ORGAN BATANG & DAUN (atau catatan gejala umum)
   let resolvedDiseaseId: OfficialDiseaseId =
-    plantPart === 'Batang'
-      ? 'wereng_batang_coklat'
-      : plantPart === 'Malai / Bunga'
-      ? 'sundep_beluk'
-      : 'kresek_hdb';
+    effectivePlantPart === 'Batang' ? 'wereng_batang_coklat' : 'kresek_hdb';
 
   if (commodity === 'Cabai' || notesLower.includes('cabai') || notesLower.includes('patek') || notesLower.includes('antraknosa')) {
     resolvedDiseaseId = 'antraknosa_cabai';
@@ -1488,8 +1675,7 @@ export function buildContextualDiagnosisResult(params: {
     notesLower.includes('sundep') ||
     notesLower.includes('beluk') ||
     notesLower.includes('penggerek') ||
-    notesLower.includes('lubang gerek') ||
-    (plantPart === 'Malai / Bunga' && (notesLower.includes('hampa') || notesLower.includes('putih')))
+    notesLower.includes('lubang gerek')
   ) {
     resolvedDiseaseId = 'sundep_beluk';
   } else if (
@@ -1565,41 +1751,26 @@ export function buildContextualDiagnosisResult(params: {
   } else if (notesLower.includes('blas') || notesLower.includes('belah ketupat') || notesLower.includes('pyricularia')) {
     resolvedDiseaseId = 'blas_daun';
   } else if (presetKey) {
-    const presetMap: Record<string, OfficialDiseaseId> = {
-      blas: 'blas_daun',
-      blas_daun: 'blas_daun',
-      kresek: 'kresek_hdb',
-      kresek_hdb: 'kresek_hdb',
-      bercak_coklat: 'bercak_coklat',
-      hawar_pelepah: 'hawar_pelepah',
-      bercak_coklat_sempit: 'bercak_coklat_sempit',
-      tungro: 'tungro',
-      hama_putih_palsu: 'hama_putih_palsu',
-      wereng: 'wereng_batang_coklat',
-      wereng_batang_coklat: 'wereng_batang_coklat',
-      sundep_beluk: 'sundep_beluk',
-      kahat_n: 'kahat_n',
-      kahat_k_fe: 'kahat_k_fe',
-      tanaman_sehat: 'tanaman_sehat',
-    };
-    resolvedDiseaseId = presetMap[presetKey] || normalizeOfficialDiseaseId(presetKey, commodity);
+    resolvedDiseaseId = normalizeOfficialDiseaseId(presetKey, commodity, effectivePlantPart);
   }
 
   return buildDiagnosisFromMatchedDiseaseId({
     matchedDiseaseId: resolvedDiseaseId,
     commodity,
-    plantPart,
+    plantPart: effectivePlantPart,
+    detectedPlantPartFromPhoto: effectivePlantPart,
+    organSpecificAnatomyCheck,
     visualObservations:
       visualObservations ||
       (symptomNotes.trim()
-        ? `Pengamatan gejala pada ${plantPart.toLowerCase()} ${commodity}: "${symptomNotes.trim()}".`
+        ? `Pengamatan gejala pada organ ${effectivePlantPart} ${commodity}: "${symptomNotes.trim()}".`
         : undefined),
     confidenceScore,
     differentialReasoning,
     visibleSymptoms,
     plotId,
     plotName,
-    aiModelUsed: aiModelUsed || 'Basis Pakar Fitopatologi Kementan RI',
+    aiModelUsed: aiModelUsed || 'Gemini AI 3.8 Flash (Basis Pakar Fitopatologi Kementan RI)',
   });
 }
 

@@ -16,6 +16,7 @@ export interface BmkgAdminRegionPreset {
   id: string;
   label: string;
   adm4Code: string;
+  bmkgAdm4Code: string;
   latitude: number;
   longitude: number;
 }
@@ -25,6 +26,7 @@ export const BMKG_ADMIN_REGION_PRESETS: BmkgAdminRegionPreset[] = [
     id: 'kudus-larikrejo',
     label: 'Desa Larikrejo, Kec. Undaan, Kab. Kudus',
     adm4Code: '33.19.03.2007',
+    bmkgAdm4Code: '33.19.03.2007',
     latitude: -6.899,
     longitude: 110.802,
   },
@@ -32,6 +34,7 @@ export const BMKG_ADMIN_REGION_PRESETS: BmkgAdminRegionPreset[] = [
     id: 'kudus-wates',
     label: 'Desa Wates, Kec. Undaan, Kab. Kudus',
     adm4Code: '33.19.03.2009',
+    bmkgAdm4Code: '33.19.03.2009',
     latitude: -6.885,
     longitude: 110.812,
   },
@@ -39,6 +42,7 @@ export const BMKG_ADMIN_REGION_PRESETS: BmkgAdminRegionPreset[] = [
     id: 'demak-gajah',
     label: 'Kec. Gajah, Kab. Demak, Jawa Tengah',
     adm4Code: '33.21.07.2001',
+    bmkgAdm4Code: '33.21.07.2001',
     latitude: -6.872,
     longitude: 110.732,
   },
@@ -46,6 +50,7 @@ export const BMKG_ADMIN_REGION_PRESETS: BmkgAdminRegionPreset[] = [
     id: 'pati-sukolilo',
     label: 'Kec. Sukolilo, Kab. Pati, Jawa Tengah',
     adm4Code: '33.18.01.2001',
+    bmkgAdm4Code: '33.18.01.2001',
     latitude: -6.924,
     longitude: 110.896,
   },
@@ -53,6 +58,7 @@ export const BMKG_ADMIN_REGION_PRESETS: BmkgAdminRegionPreset[] = [
     id: 'grobogan-purwodadi',
     label: 'Kec. Purwodadi, Kab. Grobogan, Jawa Tengah',
     adm4Code: '33.15.13.1001',
+    bmkgAdm4Code: '33.15.13.1001',
     latitude: -7.086,
     longitude: 110.916,
   },
@@ -173,6 +179,7 @@ export function formatDynamicForecastDateId(
 ): {
   dayName: string;
   formattedDate: string;
+  dateStr: string;
 } {
   try {
     const cleanIso = dateIso.slice(0, 10);
@@ -196,11 +203,13 @@ export function formatDynamicForecastDateId(
     return {
       dayName: index === 0 ? `Hari Ini (${weekdayShort})` : weekdayShort,
       formattedDate: fullFormatted,
+      dateStr: index === 0 ? 'Hari Ini' : index === 1 ? 'Besok' : cleanIso,
     };
   } catch {
     return {
       dayName: index === 0 ? 'Hari Ini' : `H+${index}`,
       formattedDate: dateIso,
+      dateStr: index === 0 ? 'Hari Ini' : index === 1 ? 'Besok' : dateIso,
     };
   }
 }
@@ -217,6 +226,7 @@ export function evaluateAgronomyWeatherAdvisory(params: {
   rainProbabilityPct: number;
   rainfallMm: number;
   windSpeedKmh: number;
+  humidityPct?: number;
   weatherCode?: number;
   tempC?: number;
   conditionText?: string;
@@ -278,78 +288,275 @@ export function formatCurrentWibTimestamp(date = new Date()): string {
   return `${timePart} WIB`;
 }
 
-/**
- * Mendeteksi koordinat GPS pengguna secara real-time menggunakan `navigator.geolocation.getCurrentPosition`
- * dengan fallback presisi ke Desa Larikrejo, Kec. Undaan, Kab. Kudus (-6.899, 110.802).
- */
-export async function detectUserCoordinatesWithFallback(timeoutMs = 4500): Promise<{
+const VERIFIED_GPS_STORAGE_KEY = 'tanicerdas_verified_device_gps_v1';
+
+export interface VerifiedGpsDetectionResult {
   latitude: number;
   longitude: number;
-  source: 'GPS Browser Akurat' | 'Koordinat Presisi Desa Larikrejo, Kudus';
-}> {
+  source:
+    | 'GPS Browser Akurat'
+    | 'Lokasi Terpilih Presisi'
+    | 'Koordinat Presisi Desa Larikrejo, Kudus';
+  locationSource?:
+    | 'GPS Browser Akurat'
+    | 'Lokasi Terpilih Presisi'
+    | 'Koordinat Presisi Desa Larikrejo, Kudus';
+  accuracyMeters?: number;
+  permissionStatus: 'granted' | 'denied' | 'prompt' | 'manual';
+  errorMessage?: string;
+}
+
+export function getSavedVerifiedGpsLocation(): {
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+  locationName?: string;
+  source: 'GPS Browser Akurat' | 'Lokasi Terpilih Presisi';
+} | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(VERIFIED_GPS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.latitude === 'number' &&
+      typeof parsed?.longitude === 'number' &&
+      Number.isFinite(parsed.latitude) &&
+      Number.isFinite(parsed.longitude)
+    ) {
+      return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+export function saveVerifiedGpsLocation(payload: {
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+  locationName?: string;
+  source: 'GPS Browser Akurat' | 'Lokasi Terpilih Presisi';
+}): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(VERIFIED_GPS_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Mencari titik koordinat Desa / Kecamatan / Kabupaten di Indonesia menggunakan
+ * Open-Meteo Geocoding API & Nominatim OpenStreetMap.
+ */
+export async function searchIndonesianLocationCoordinates(query: string): Promise<
+  Array<{
+    id: string;
+    name: string;
+    fullName: string;
+    latitude: number;
+    longitude: number;
+  }>
+> {
+  const cleanQuery = (query || '').trim();
+  if (cleanQuery.length < 2) return [];
+
+  try {
+    const omUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+      cleanQuery
+    )}&count=6&language=id&format=json`;
+    const res = await fetch(omUrl, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      const results = Array.isArray(data?.results) ? data.results : [];
+      const mapped = results.map((item: any, idx: number) => {
+        const parts = [item.name, item.admin3, item.admin2, item.admin1, item.country]
+          .map((p) => String(p || '').trim())
+          .filter(Boolean);
+        const unique = Array.from(new Set(parts));
+        return {
+          id: `geo-${item.id || idx}-${item.latitude}-${item.longitude}`,
+          name: item.name || cleanQuery,
+          fullName: unique.join(', '),
+          latitude: Number(Number(item.latitude).toFixed(5)),
+          longitude: Number(Number(item.longitude).toFixed(5)),
+        };
+      });
+      if (mapped.length > 0) return mapped;
+    }
+  } catch {
+    // Lanjut ke Nominatim
+  }
+
+  try {
+    const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      `${cleanQuery}, Indonesia`
+    )}&limit=5&accept-language=id`;
+    const res = await fetch(nomUrl, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data.map((item: any, idx: number) => ({
+          id: `nom-${idx}-${item.lat}-${item.lon}`,
+          name: String(item.display_name || cleanQuery).split(',')[0],
+          fullName: String(item.display_name || cleanQuery),
+          latitude: Number(Number(item.lat).toFixed(5)),
+          longitude: Number(Number(item.lon).toFixed(5)),
+        }));
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return [];
+}
+
+/**
+ * Mendeteksi koordinat GPS perangkat pengguna secara real-time menggunakan `navigator.geolocation.getCurrentPosition`
+ * (2 tahap: High-Accuracy GPS Satelit -> Fallback Network/Wi-Fi Geolocation) agar sangat akurat di HP maupun Laptop.
+ * Jika izin lokasi ditolak/belum aktif, mengembalikan status `permissionStatus: 'denied' | 'prompt'` beserta pesan wajib aktifkan lokasi.
+ */
+export async function detectUserCoordinatesWithFallback(
+  timeoutMs = 7000
+): Promise<VerifiedGpsDetectionResult> {
   if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+    const saved = getSavedVerifiedGpsLocation();
+    if (saved) {
+      return {
+        latitude: saved.latitude,
+        longitude: saved.longitude,
+        source: saved.source,
+        locationSource: saved.source,
+        accuracyMeters: saved.accuracyMeters,
+        permissionStatus: saved.source === 'GPS Browser Akurat' ? 'granted' : 'manual',
+      };
+    }
     return {
       latitude: DEFAULT_LARIKREJO_COORDS.latitude,
       longitude: DEFAULT_LARIKREJO_COORDS.longitude,
       source: 'Koordinat Presisi Desa Larikrejo, Kudus',
+      locationSource: 'Koordinat Presisi Desa Larikrejo, Kudus',
+      permissionStatus: 'denied',
+      errorMessage:
+        'Perangkat/browser tidak mendukung modul Geolocation. Wajib aktifkan layanan Lokasi (GPS) atau pilih titik lokasi lahan.',
     };
   }
 
-  return new Promise((resolve) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        resolve({
-          latitude: DEFAULT_LARIKREJO_COORDS.latitude,
-          longitude: DEFAULT_LARIKREJO_COORDS.longitude,
-          source: 'Koordinat Presisi Desa Larikrejo, Kudus',
-        });
-      }
-    }, timeoutMs);
-
-    try {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          const lat = Number(pos.coords.latitude.toFixed(4));
-          const lon = Number(pos.coords.longitude.toFixed(4));
-          resolve({
-            latitude: lat,
-            longitude: lon,
-            source: 'GPS Browser Akurat',
-          });
-        },
-        () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          resolve({
-            latitude: DEFAULT_LARIKREJO_COORDS.latitude,
-            longitude: DEFAULT_LARIKREJO_COORDS.longitude,
-            source: 'Koordinat Presisi Desa Larikrejo, Kudus',
-          });
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: timeoutMs,
-          maximumAge: 60000,
+  // Helper untuk memanggil getCurrentPosition sebagai Promise
+  const requestPosition = (highAccuracy: boolean, waitMs: number) =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      let done = false;
+      const timer = setTimeout(() => {
+        if (!done) {
+          done = true;
+          reject({ code: 3, message: 'Timeout' });
         }
-      );
-    } catch {
-      if (!settled) {
-        settled = true;
-        clearTimeout(timer);
-        resolve({
-          latitude: DEFAULT_LARIKREJO_COORDS.latitude,
-          longitude: DEFAULT_LARIKREJO_COORDS.longitude,
-          source: 'Koordinat Presisi Desa Larikrejo, Kudus',
+      }, waitMs);
+
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            resolve(pos);
+          },
+          (err) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            reject(err);
+          },
+          {
+            enableHighAccuracy: highAccuracy,
+            timeout: waitMs,
+            maximumAge: highAccuracy ? 0 : 15000,
+          }
+        );
+      } catch (err) {
+        if (!done) {
+          done = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      }
+    });
+
+  try {
+    // Tahap 1: Presisi Tinggi (GPS Satelit / Sensor Perangkat, maximumAge: 0)
+    const pos = await requestPosition(true, timeoutMs);
+    const lat = Number(pos.coords.latitude.toFixed(5));
+    const lon = Number(pos.coords.longitude.toFixed(5));
+    const acc = Math.max(3, Math.round(Number(pos.coords.accuracy || 15)));
+    saveVerifiedGpsLocation({
+      latitude: lat,
+      longitude: lon,
+      accuracyMeters: acc,
+      source: 'GPS Browser Akurat',
+    });
+    return {
+      latitude: lat,
+      longitude: lon,
+      source: 'GPS Browser Akurat',
+      locationSource: 'GPS Browser Akurat',
+      accuracyMeters: acc,
+      permissionStatus: 'granted',
+    };
+  } catch (firstErr: any) {
+    // Jika bukan karena ditolak eksplisit (code === 1), coba Tahap 2: Network/Wi-Fi Location agar tetap akurat di dalam ruangan/laptop
+    if (firstErr?.code !== 1) {
+      try {
+        const netPos = await requestPosition(false, 4500);
+        const lat = Number(netPos.coords.latitude.toFixed(5));
+        const lon = Number(netPos.coords.longitude.toFixed(5));
+        const acc = Math.max(10, Math.round(Number(netPos.coords.accuracy || 50)));
+        saveVerifiedGpsLocation({
+          latitude: lat,
+          longitude: lon,
+          accuracyMeters: acc,
+          source: 'GPS Browser Akurat',
         });
+        return {
+          latitude: lat,
+          longitude: lon,
+          source: 'GPS Browser Akurat',
+          locationSource: 'GPS Browser Akurat',
+          accuracyMeters: acc,
+          permissionStatus: 'granted',
+        };
+      } catch {
+        // Lanjut ke penanganan fallback
       }
     }
-  });
+
+    // Jika sebelumnya pengguna sudah pernah mengaktifkan GPS atau mengunci lokasi, gunakan koordinat tersebut
+    const saved = getSavedVerifiedGpsLocation();
+    if (saved) {
+      return {
+        latitude: saved.latitude,
+        longitude: saved.longitude,
+        source: saved.source,
+        locationSource: saved.source,
+        accuracyMeters: saved.accuracyMeters,
+        permissionStatus: saved.source === 'GPS Browser Akurat' ? 'granted' : 'manual',
+      };
+    }
+
+    const isDenied = firstErr?.code === 1;
+    return {
+      latitude: DEFAULT_LARIKREJO_COORDS.latitude,
+      longitude: DEFAULT_LARIKREJO_COORDS.longitude,
+      source: 'Koordinat Presisi Desa Larikrejo, Kudus',
+      locationSource: 'Koordinat Presisi Desa Larikrejo, Kudus',
+      permissionStatus: isDenied ? 'denied' : 'prompt',
+      errorMessage: isDenied
+        ? 'Izin lokasi (GPS) perangkat ditolak/nonaktif. Wajib aktifkan izin Lokasi pada browser/HP Anda agar deteksi cuaca akurat sesuai titik lahan.'
+        : 'Lokasi GPS perangkat belum aktif atau sinyal lemah. Klik "Aktifkan GPS Perangkat" untuk mengunci cuaca akurat di lokasi Anda.',
+    };
+  }
 }
 
 /**
@@ -363,6 +570,10 @@ export async function reverseGeocodeLocationName(
   const isDefaultKudus =
     Math.abs(latitude - DEFAULT_LARIKREJO_COORDS.latitude) < 0.008 &&
     Math.abs(longitude - DEFAULT_LARIKREJO_COORDS.longitude) < 0.008;
+
+  if (isDefaultKudus) {
+    return DEFAULT_LARIKREJO_COORDS.locationName;
+  }
 
   // 1. Coba Nominatim OpenStreetMap (memiliki detail village/suburb/county Indonesia yang sangat akurat)
   try {
@@ -438,26 +649,33 @@ export async function reverseGeocodeLocationName(
  * lengkap tanpa data statis/hardcoded.
  */
 export function parseOpenMeteoResponseToSnapshot(params: {
-  data: any;
+  data?: any;
+  raw?: any;
   latitude: number;
   longitude: number;
   locationName: string;
   locationSource?: WeatherSnapshot['locationSource'];
+  gpsAccuracyMeters?: number;
+  gpsPermissionStatus?: WeatherSnapshot['gpsPermissionStatus'];
+  gpsErrorMessage?: string;
   bmkgAdm4Code?: string;
   bmkgNote?: string;
   providerMode?: 'open-meteo' | 'bmkg-hybrid';
 }): WeatherSnapshot {
   const {
-    data,
     latitude,
     longitude,
     locationName,
     locationSource = 'Koordinat Presisi Desa Larikrejo, Kudus',
+    gpsAccuracyMeters,
+    gpsPermissionStatus,
+    gpsErrorMessage,
     bmkgAdm4Code = DEFAULT_LARIKREJO_COORDS.bmkgAdm4Code,
     bmkgNote,
     providerMode = 'bmkg-hybrid',
   } = params;
 
+  const data = params.data || params.raw || {};
   const current = data?.current || {};
   const hourly = data?.hourly || {};
   const daily = data?.daily || {};
@@ -551,6 +769,9 @@ export function parseOpenMeteoResponseToSnapshot(params: {
     latitude,
     longitude,
     locationSource,
+    gpsAccuracyMeters,
+    gpsPermissionStatus,
+    gpsErrorMessage,
     bmkgAdm4Code,
     tempC: Math.round(tempC),
     apparentTempC: Math.round(apparentTempC),
@@ -592,23 +813,47 @@ export async function fetchLiveMultiSourceWeather(options?: {
   bmkgAdm4Code?: string;
   providerMode?: 'open-meteo' | 'bmkg-hybrid';
   useBrowserGps?: boolean;
+  customCoords?: {
+    latitude: number;
+    longitude: number;
+    locationName?: string;
+    bmkgAdm4Code?: string;
+    source?: WeatherSnapshot['locationSource'];
+  };
 }): Promise<WeatherSnapshot> {
-  let lat = options?.latitude;
-  let lon = options?.longitude;
+  let lat = options?.customCoords?.latitude ?? options?.latitude;
+  let lon = options?.customCoords?.longitude ?? options?.longitude;
+  const preferredLocationName = options?.customCoords?.locationName ?? options?.locationName;
   let locSource: WeatherSnapshot['locationSource'] =
-    options?.locationSource || 'Koordinat Presisi Desa Larikrejo, Kudus';
+    options?.customCoords?.source ||
+    options?.locationSource ||
+    'Lokasi Terpilih Presisi';
+  let gpsAccuracyMeters: number | undefined;
+  let gpsPermissionStatus: WeatherSnapshot['gpsPermissionStatus'] = 'manual';
+  let gpsErrorMessage: string | undefined;
 
   if (options?.useBrowserGps || typeof lat !== 'number' || typeof lon !== 'number') {
     const detected = await detectUserCoordinatesWithFallback();
     lat = detected.latitude;
     lon = detected.longitude;
     locSource = detected.source;
+    gpsAccuracyMeters = detected.accuracyMeters;
+    gpsPermissionStatus = detected.permissionStatus;
+    gpsErrorMessage = detected.errorMessage;
+  } else {
+    saveVerifiedGpsLocation({
+      latitude: lat,
+      longitude: lon,
+      locationName: preferredLocationName,
+      source: locSource === 'GPS Browser Akurat' ? 'GPS Browser Akurat' : 'Lokasi Terpilih Presisi',
+    });
   }
 
   const matchedPreset = BMKG_ADMIN_REGION_PRESETS.find(
     (p) => Math.abs(p.latitude - lat!) < 0.015 && Math.abs(p.longitude - lon!) < 0.015
   );
   const adm4Code =
+    options?.customCoords?.bmkgAdm4Code ||
     options?.bmkgAdm4Code ||
     matchedPreset?.adm4Code ||
     DEFAULT_LARIKREJO_COORDS.bmkgAdm4Code;
@@ -629,8 +874,8 @@ export async function fetchLiveMultiSourceWeather(options?: {
         }
         return res.json();
       }),
-      options?.locationName
-        ? Promise.resolve(options.locationName)
+      preferredLocationName
+        ? Promise.resolve(preferredLocationName)
         : reverseGeocodeLocationName(lat, lon),
       providerMode === 'bmkg-hybrid'
         ? fetchBmkgAdm4Verification(adm4Code)
@@ -638,8 +883,8 @@ export async function fetchLiveMultiSourceWeather(options?: {
     ]);
 
     const finalLocationName =
-      options?.locationName
-        ? options.locationName
+      preferredLocationName
+        ? preferredLocationName
         : matchedPreset && bmkgInfo?.desa && bmkgInfo?.kecamatan && bmkgInfo?.kotkab
         ? `Desa ${bmkgInfo.desa}, Kec. ${bmkgInfo.kecamatan}, ${bmkgInfo.kotkab}`
         : resolvedLocationName;
@@ -650,6 +895,9 @@ export async function fetchLiveMultiSourceWeather(options?: {
       longitude: lon,
       locationName: finalLocationName,
       locationSource: locSource,
+      gpsAccuracyMeters,
+      gpsPermissionStatus,
+      gpsErrorMessage,
       bmkgAdm4Code: adm4Code,
       bmkgNote:
         providerMode === 'bmkg-hybrid'
@@ -671,6 +919,9 @@ export async function fetchLiveMultiSourceWeather(options?: {
       return {
         ...serverSnapshot,
         locationSource: locSource,
+        gpsAccuracyMeters,
+        gpsPermissionStatus,
+        gpsErrorMessage,
       };
     }
     throw new Error('Respons data cuaca tidak valid.');

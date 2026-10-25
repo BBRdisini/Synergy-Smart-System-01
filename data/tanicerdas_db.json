@@ -1,6 +1,6 @@
 {
   "version": "1.0.0-tahap1-persistent",
-  "updatedAt": "2026-10-24T13:31:35.510Z",
+  "updatedAt": "2026-10-25T08:40:30.663Z",
   "users": [
     {
       "id": "usr-budi-santoso",
@@ -959,6 +959,21 @@
     }
   ],
   "cultivationTasks": [
+    {
+      "id": "ctask-opt-1792917630635",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "stageOrder": 6,
+      "category": "Pengendalian Hama & Penyakit",
+      "title": "Penyemprotan PHT Terpadu: Kendali Sundep/Beluk, Thrips, Ulat Grayak & Cercospora",
+      "scheduledDate": "2026-10-26",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Takaran Tangki 16L: Virtako 300 SC (10 ml) atau Agrimec 18 EC (12 ml) + Score 250 EC (12 ml). Waktu ideal: Tunda hingga cuaca reda (Jendela ideal besok pagi 21:00 – 22:00 WIB atau sore 15:30 – 17:00 WIB).",
+      "recommendationSource": "Sistem Peringatan Dini Epidemiologi OPT Real-Time",
+      "createdAt": "2026-10-25T08:40:30.635Z"
+    },
     {
       "id": "ctask-alert-1792848695499",
       "ownerId": "usr-budi-santoso",

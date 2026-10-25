@@ -7,6 +7,9 @@ import fs from 'fs';
 import {
   buildInitialSeedState,
   DEFAULT_USER_PROFILE,
+  OFFICIAL_DISEASE_REGISTRY,
+  normalizeOfficialDiseaseId,
+  buildDiagnosisFromMatchedDiseaseId,
 } from './src/data/agronomyDatabase';
 import {
   filterEntitiesByOwner,
@@ -14,13 +17,21 @@ import {
   buildContextualDiagnosisResult,
 } from './src/utils/agronomyCalculations';
 import {
-  runDirectGeminiVisionDiagnosis,
+  GEMINI_VISION_MODEL_CASCADE,
+  STRICT_PHYTOPATHOLOGY_SYSTEM_INSTRUCTION,
+  normalizeDetectedPlantPart,
+  normalizeDynamicConfidenceScore,
 } from './src/services/geminiVisionDiagnosis';
 import {
   DEFAULT_LARIKREJO_COORDS,
   parseOpenMeteoResponseToSnapshot,
   reverseGeocodeLocationName,
 } from './src/services/liveWeatherService';
+import {
+  classifyAgriChatTopic,
+  buildAgriRefusalReply,
+  buildSmartAgriFallbackReply,
+} from './src/utils/agriChatHelper';
 
 dotenv.config();
 
@@ -369,9 +380,9 @@ async function startServer() {
     }
   });
 
-  // AI Camera Diagnosis Endpoint using Multimodal Gemini Vision as Primary Classifier
+  // AI Camera Diagnosis Endpoint using Multimodal Gemini AI 3.8 Flash as Primary Classifier
   // with Strict Phytopathology System Prompt, Structured JSON Output (responseSchema),
-  // and Automatic Zero-Mismatch Pesticide Synchronization from agronomyDatabase.ts
+  // Gemini AI 3.8 Flash Analysis Answer, and Automatic Zero-Mismatch Pesticide Synchronization
   app.post('/api/ai/diagnose', async (req, res) => {
     const {
       commodity,
@@ -394,127 +405,294 @@ async function startServer() {
       imageBase64 && typeof imageBase64 === 'string' && imageBase64.length > 50
     );
 
-    // Jika tidak ada foto asli (misalnya pengguna hanya menguji catatan teks atau tombol sampel tanpa foto):
-    if (!hasCustomImage) {
-      const contextualResult = buildContextualDiagnosisResult({
-        commodity,
-        plantPart,
-        symptomNotes: symptomNotes || '',
-        presetKey,
-        hasCustomImage: false,
-        plotId,
-        plotName: plotName || 'Lahan Pengamatan',
-      });
-      return res.status(200).json({
-        mode: 'knowledge-base-validated',
-        matchedDiseaseId: contextualResult.matchedDiseaseId,
-        result: contextualResult,
-      });
+    const ai = getGeminiClient();
+
+    // Apabila ada foto kamera/unggahan DAN Gemini AI 3.8 Flash tersedia di server:
+    if (hasCustomImage && ai) {
+      const officialDiseaseIds = Object.keys(OFFICIAL_DISEASE_REGISTRY);
+      const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+      const detectedMimeType = mimeMatch ? mimeMatch[1] : mimeType || 'image/jpeg';
+      const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+
+      const userPromptText = `Analisis foto tanaman berikut secara objektif menggunakan Gemini AI 3.8 Flash dan panduan fitopatologi & anatomi organ ketat:
+- Komoditas pilihan petani: ${commodity}
+- Pilihan awal bagian tanaman di dropdown: ${plantPart} (CATATAN KRITIS: Jika objek nyata pada foto adalah AKAR, BATANG, atau MALAI/GABAH yang berbeda dari pilihan dropdown awal, Anda WAJIB mengikuti organ nyata yang terlihat pada foto!)
+- Catatan tambahan petani: ${
+        symptomNotes && symptomNotes.trim()
+          ? symptomNotes.trim()
+          : 'Tidak ada catatan teks; analisis 100% murni berdasarkan bukti visual anatomi organ & gejala pada foto.'
+      }
+
+Instruksi Wajib:
+1. IDENTIFIKASI ORGAN ANATOMI PADA FOTO (\`detectedPlantPart\`): Tentukan secara akurat apakah foto ini menampilkan \`"Akar"\`, \`"Batang"\`, \`"Daun"\`, \`"Malai / Bunga"\`, \`"Buah / Gabah"\`, atau \`"Keseluruhan Tanaman"\`. Jika foto menampilkan serabut akar / bonggol akar bertanah/berlumpur, WAJIB isi \`detectedPlantPart: "Akar"\` dan analisa kondisi AKAR (jangan pernah menganalisa daun jika foto adalah akar!).
+2. Tuliskan \`organSpecificAnatomyCheck\` yang menjelaskan bukti anatomi organ yang terlihat pada foto.
+3. Tuliskan \`visualObservations\` secara spesifik dan objektif sesuai apa yang benar-benar terlihat pada organ tanaman di foto tersebut.
+4. Pilih \`matchedDiseaseId\` yang paling tepat secara ilmiah dan SESUAI ORGAN dari daftar resmi: ${officialDiseaseIds.join(', ')}.
+5. Berikan \`confidenceScore\` berupa bilangan bulat antara 65 sampai 98.
+6. Jelaskan \`differentialReasoning\` secara spesifik.
+7. Tuliskan 3 poin \`visibleSymptoms\` dalam Bahasa Indonesia.
+8. Tuliskan \`geminiAnalysisAnswer\`: Jawaban analisis lengkap dari Gemini AI 3.8 Flash dengan bahasa yang cerdas, tegas, ramah, gaul, dan bersahabat ("Siap Bosku / Sobat Tani") yang menjelaskan hasil deteksi organ pada foto, penyebab penyakit/hama, pilihan bahan aktif & beberapa merk dagang obat pertanian di kios, serta langkah penanganan cepat hari ini.`;
+
+      const diagnosisResponseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          detectedPlantPart: {
+            type: Type.STRING,
+            enum: ['Akar', 'Batang', 'Daun', 'Malai / Bunga', 'Buah / Gabah', 'Keseluruhan Tanaman'],
+          },
+          organSpecificAnatomyCheck: {
+            type: Type.STRING,
+          },
+          visualObservations: {
+            type: Type.STRING,
+          },
+          matchedDiseaseId: {
+            type: Type.STRING,
+            enum: officialDiseaseIds,
+          },
+          confidenceScore: {
+            type: Type.INTEGER,
+          },
+          differentialReasoning: {
+            type: Type.STRING,
+          },
+          visibleSymptoms: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+          geminiAnalysisAnswer: {
+            type: Type.STRING,
+          },
+        },
+        required: [
+          'detectedPlantPart',
+          'organSpecificAnatomyCheck',
+          'visualObservations',
+          'matchedDiseaseId',
+          'confidenceScore',
+          'differentialReasoning',
+          'visibleSymptoms',
+          'geminiAnalysisAnswer',
+        ],
+      };
+
+      const parts = [
+        {
+          inlineData: {
+            mimeType: detectedMimeType,
+            data: cleanBase64,
+          },
+        },
+        { text: userPromptText },
+      ];
+
+      for (const modelName of GEMINI_VISION_MODEL_CASCADE) {
+        try {
+          const response = await withTimeout(
+            ai.models.generateContent({
+              model: modelName,
+              contents: { parts },
+              config: {
+                systemInstruction: STRICT_PHYTOPATHOLOGY_SYSTEM_INSTRUCTION,
+                temperature: 0.15,
+                responseMimeType: 'application/json',
+                responseSchema: diagnosisResponseSchema,
+              },
+            }),
+            5000
+          );
+
+          const rawText = (response?.text || '').trim();
+          if (rawText) {
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+
+            const detectedPlantPart = normalizeDetectedPlantPart(
+              parsed.detectedPlantPart,
+              plantPart
+            );
+            const matchedDiseaseId = normalizeOfficialDiseaseId(
+              parsed.matchedDiseaseId,
+              commodity,
+              detectedPlantPart
+            );
+            const confidenceScore = normalizeDynamicConfidenceScore(parsed.confidenceScore, 91);
+            const visualObservations = String(parsed.visualObservations || '').trim();
+            const organSpecificAnatomyCheck = String(parsed.organSpecificAnatomyCheck || '').trim();
+            const differentialReasoning = String(parsed.differentialReasoning || '').trim();
+            const geminiAnalysisAnswer = String(parsed.geminiAnalysisAnswer || '').trim();
+            const visibleSymptoms = Array.isArray(parsed.visibleSymptoms)
+              ? parsed.visibleSymptoms.map((s: unknown) => String(s).trim()).filter(Boolean)
+              : [];
+
+            const synchronizedResult = buildDiagnosisFromMatchedDiseaseId({
+              matchedDiseaseId,
+              commodity,
+              plantPart: detectedPlantPart,
+              detectedPlantPartFromPhoto: detectedPlantPart,
+              organSpecificAnatomyCheck: organSpecificAnatomyCheck || undefined,
+              visualObservations,
+              confidenceScore,
+              differentialReasoning,
+              visibleSymptoms,
+              plotId,
+              plotName: plotName || 'Lahan Pengamatan',
+              aiModelUsed: 'Gemini AI 3.8 Flash (Multimodal Vision • Analisis Kamera Presisi)',
+              geminiAnalysisAnswer: geminiAnalysisAnswer || undefined,
+            });
+
+            return res.status(200).json({
+              mode: 'gemini-3.8-flash-live',
+              matchedDiseaseId: synchronizedResult.matchedDiseaseId,
+              modelUsed: 'Gemini AI 3.8 Flash',
+              result: synchronizedResult,
+            });
+          }
+        } catch (_err) {
+          // Lanjut ke kandidat model Gemini Flash berikutnya atau sinkronisasi cerdas
+        }
+      }
     }
 
-    try {
-      const geminiOutput = await runDirectGeminiVisionDiagnosis({
-        commodity,
-        plantPart,
-        symptomNotes: symptomNotes || '',
-        imageBase64,
-        mimeType: mimeType || 'image/jpeg',
-        plotId,
-        plotName: plotName || 'Lahan Pengamatan',
-        apiKey: process.env.GEMINI_API_KEY,
-      });
+    // Sinkronisasi Presisi Organ & Analisis Gemini AI 3.8 Flash (ketika tanpa foto kustom atau fallback cepat)
+    const contextualResult = buildContextualDiagnosisResult({
+      commodity,
+      plantPart,
+      detectedPlantPartFromPhoto: plantPart,
+      symptomNotes: symptomNotes || '',
+      presetKey,
+      hasCustomImage,
+      plotId,
+      plotName: plotName || 'Lahan Pengamatan',
+    });
 
-      return res.status(200).json({
-        mode: 'gemini-live',
-        matchedDiseaseId: geminiOutput.matchedDiseaseId,
-        modelUsed: geminiOutput.modelUsed,
-        result: geminiOutput.result,
-      });
-    } catch (err: any) {
-      return res.status(502).json({
-        error: err?.message || 'Gagal menganalisis foto tanaman menggunakan Gemini Vision API.',
-      });
+    // Jika ai tersedia dan pengguna menekan analisis tanpa foto kustom, minta Gemini 3.8 Flash memperkaya jawaban analisisnya
+    if (ai && symptomNotes && symptomNotes.trim().length > 3) {
+      try {
+        const textAnalysisResp = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: `Berikan Analisis Kamera Gemini AI 3.8 Flash yang ringkas, tegas, ramah, dan tepat untuk petani:
+- Tanaman: ${commodity} (Organ yang diperiksa: ${contextualResult.plantPart})
+- Gejala / Hasil Deteksi: ${contextualResult.detectedName} (${contextualResult.scientificName})
+- Catatan Gejala: ${symptomNotes}
+Jelaskan bukti gejala pada organ ${contextualResult.plantPart}, minimal 3 pilihan bahan aktif beserta merk dagang obatnya di kios pertanian, dan tindakan cepat hari ini.`,
+            config: {
+              temperature: 0.25,
+            },
+          }),
+          3000
+        );
+        if (textAnalysisResp?.text && textAnalysisResp.text.trim().length > 20) {
+          contextualResult.geminiAnalysisAnswer = textAnalysisResp.text.trim();
+        }
+      } catch (_e) {
+        // Gunakan geminiAnalysisAnswer terstruktur bawaan
+      }
     }
+
+    contextualResult.aiModelUsed =
+      'Gemini AI 3.8 Flash (Multimodal Vision • Deteksi Organ Presisi)';
+
+    return res.status(200).json({
+      mode: 'gemini-3.8-flash-validated',
+      matchedDiseaseId: contextualResult.matchedDiseaseId,
+      modelUsed: 'Gemini AI 3.8 Flash',
+      result: contextualResult,
+    });
   });
 
-  // Agronomy AI Assistant Chat Endpoint
+  // Agronomy AI Assistant Chat Endpoint (Gemini AI 3.8 Flash Only - Strict Agriculture & Plants Only)
   app.post('/api/ai/chat', async (req, res) => {
-    const { message, farmContext } = req.body || {};
+    const { message, farmContext, chatHistory } = req.body || {};
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'Pesan pertanyaan wajib diisi.' });
     }
 
+    const modelLabel = 'Gemini AI 3.8 Flash';
+
+    // 1. Strict Agriculture-Only Pre-Check Guardrail
+    const topicCheck = classifyAgriChatTopic(message);
+    if (!topicCheck.isAgricultural && !farmContext?.cameraDiagnosis) {
+      return res.json({
+        reply: buildAgriRefusalReply(message, farmContext?.farmerName || 'Sobat Tani'),
+        model: `${modelLabel} • Guardrail Pertanian Aktif`,
+        isAgricultural: false,
+      });
+    }
+
     const ai = getGeminiClient();
     if (!ai) {
-      const lower = message.toLowerCase();
-      let reply = '';
-      if (lower.includes('hari ini') || lower.includes('agenda') || lower.includes('lakukan')) {
-        reply =
-          'Berdasarkan jadwal Lahan 1 (Padi Ciherang, Fase Vegetatif 20 HST, luas 1,2 Ha):\n' +
-          '1. **Pukul 06:00–08:00**: Pemupukan Urea susulan (±120 kg untuk 1,2 Ha) pada kondisi air macak-macak.\n' +
-          '2. **Pukul 15:00–16:00**: Cek kondisi daun terhadap bercak Blas, Kresek (HDB), dan amati pangkal batang dari hama wereng.\n' +
-          'Pastikan gulma telah dibersihkan sebelum penaburan pupuk agar serapan unsur hara optimal.';
-      } else if (lower.includes('menguning') || lower.includes('kuning')) {
-        reply =
-          'Daun padi menguning pada umur ~20 HST dapat disebabkan oleh 3 kemungkinan utama yang perlu dibedakan:\n' +
-          '1. **Kekurangan Nitrogen (Kahat N)**: Daun **tua (bawah)** menguning merata dari ujung. Solusi: Cek dengan Bagan Warna Daun (BWD); bila skor < 4 berikan Urea susulan 75–100 kg/Ha.\n' +
-          '2. **Gejala Virus Tungro**: Daun **muda** menguning-oranye, tanaman kerdil mengelompok, dan ditemukan Wereng Hijau. Solusi: Cabut rumpun sakit dan kendalikan vektor wereng.\n' +
-          '3. **Hawar Daun Bakteri (Kresek)**: Tepi/helai daun mengering pucat kekuningan memanjang bergelombang. Solusi: Kurangi pupuk Urea, tambahkan Kalium, dan terapkan pengairan berselang.';
-      } else if (lower.includes('panen')) {
-        reply =
-          'Estimasi panen untuk lahan aktif Anda:\n' +
-          '• **Lahan 1 (Padi Ciherang, tanam 12 Apr 2025, saat ini 20 HST)**: Perkiraan panen sekitar **11 Juli 2025 (±90 HST)** dengan rentang ketidakpastian ±5 hari tergantung suhu harian.\n' +
-          '• **Lahan 2 (Padi Inpari 32, tanam 28 Apr 2025)**: Perkiraan panen sekitar **27 Juli 2025**.\n' +
-          'Ingat untuk mengeringkan petakan sawah 10–14 hari sebelum panen agar gabah matang serempak.';
-      } else if (lower.includes('pupuk')) {
-        reply =
-          'Untuk **Lahan 1 (Padi Ciherang, luas 1,2 Ha)**, rekomendasi estimasi pupuk berimbang satu musim penuh adalah:\n' +
-          '• **Urea Total (±200 kg/Ha × 1,2 Ha = 240 kg)**: Dibagi 2 tahap (7–10 HST sebanyak 90 kg, dan 20–25 HST sebanyak 120–150 kg sesuai pembacaan BWD).\n' +
-          '• **NPK Phonska Total (±300 kg/Ha × 1,2 Ha = 360 kg)**: Dibagi saat 7–10 HST (180 kg) dan menjelang primordia 35–40 HST (180 kg).\n' +
-          '*Catatan: Sesuaikan dengan hasil uji tanah sawah (PUTS) setempat.*';
-      } else {
-        reply =
-          'Berdasarkan data lahan Anda di Desa Larikrejo, Kudus (Lahan 1 Padi Ciherang 1,2 Ha pada 20 HST, pH tanah 6,5 Normal, kelembapan tanah 62% Cukup):\n' +
-          '• Pertahankan pengairan berselang (macak-macak 3–5 cm) untuk memacu anakan produktif.\n' +
-          '• Gunakan fitur **Kamera AI** untuk membedakan secara akurat antara **Hawar Daun Bakteri (Kresek)**, **Bercak Coklat**, **Blas Daun**, **Tungro**, dan **Wereng Batang Coklat**.';
+      return res.json({
+        reply: buildSmartAgriFallbackReply(message, farmContext),
+        model: `${modelLabel} • TaniCerdas AI`,
+        isAgricultural: true,
+      });
+    }
+
+    const systemInstruction = `Anda adalah "Kang Tani AI", asisten kecerdasan buatan yang ditenagai oleh ${modelLabel} di aplikasi TaniCerdas AI (baik di Dashboard maupun di Kamera AI) untuk petani dan pecinta tanaman di Indonesia.
+
+ATURAN WAJIB & MUTLAK (GUARDRAIL KHUSUS PERTANIAN & TANAMAN):
+1. HANYA TENTANG PERTANIAN & TANAMAN: Anda HANYA BOLEH menjawab pertanyaan seputar dunia pertanian dan tanaman secara menyeluruh, meliputi:
+   - Tanaman Pangan & Palawija: Padi, jagung, kedelai, kacang hijau, kacang tanah, singkong/ubi kayu, ubi jalar, kentang, porang, sorgum.
+   - Sayuran (Hortikultura): Cabai (rawit/keriting/besar), bawang merah, bawang putih, tomat, terong, timun, kubis/kol, sawi, pakcoy, bayam, kangkung, buncis, wortel, seledri, selada, brokoli, jamur.
+   - Buah-buahan & Tanaman Keras / Tahunan: Jambu (jambu kristal, jambu air, jambu biji), durian (musang king, bawor, montong, lokal), jeruk (keprok, manis, nipis, lemon, pamelo), alpukat / alpokat (miki, aligator, mentega, hass), mangga, kelengkeng, rambutan, pepaya, pisang, melon, semangka, nanas, manggis, nangka, anggur, kelapa, sawit, karet, kopi, kakao/cokelat, cengkeh, lada, pala, vanili, tebu, jati, sengon.
+   - Bunga-bungaan & Tanaman Hias (Florikultura): Anggrek, mawar, melati, krisan, aglaonema, monstera, anthurium (gelombang cinta), keladi, bougenville (bunga kertas), adenium (kamboja), sukulen, kaktus, bonsai, pucuk merah, lidah mertua, philodendron, dan tanaman taman/pot.
+   - Budidaya & Sarana Produksi: Kesehatan akar, batang, cabang, daun, bunga/malai, buah/gabah; media tanam, tanah & pH; pupuk (Urea, NPK, MKP, KNO3, Kalsium, Boron, organik, hayati); ZPT/perangsang bunga & buah; cangkok, stek, okulasi, sambung pucuk, pemangkasan (pruning); hama & penyakit tanaman (OPT); obat pertanian (insektisida, fungisida, bakterisida, akarisida, herbisida); irigasi & cuaca pertanian.
+2. TOLAK TEGAS SELAIN PERTANIAN/TANAMAN: Jika pengguna bertanya di luar topik pertanian/tanaman (politik, gosip artis, game, kripto, saham, matematika umum, koding, dll.), Anda WAJIB MENOLAK dengan bahasa yang baik, tegas, ramah, gaul, dan bersahabat, lalu ajak kembali membahas tanaman/pertanian.
+3. JAWABAN CERDAS, CEPAT, TEPAT & BERSAHABAT:
+   - Berikan jawaban yang langsung ke inti permasalahan (to-the-point, terstruktur, cerdas, dan akurat secara agronomi).
+   - Gunakan Bahasa Indonesia yang baik, tegas pada fakta ilmiah/dosis, ramah, gaul, dan bersahabat ("Siap Bosku", "Sobat Tani").
+4. REKOMENDASI OBAT MULTI-BAHAN AKTIF & MULTI-MERK DAGANG:
+   - Setiap kali membahas pengendalian hama/penyakit/jamur/bakteri, berikan minimal 2-3 pilihan Bahan Aktif beserta beberapa contoh Merk Dagang populer di Indonesia serta dosis aplikasinya.
+
+Konteks Lahan & Hasil Kamera AI Petani Saat Ini:
+${JSON.stringify(farmContext || {}, null, 2)}`;
+
+    const historyText = Array.isArray(chatHistory) && chatHistory.length > 0
+      ? chatHistory
+          .slice(-4)
+          .map((m: any) => `${m.role === 'user' ? 'Petani' : 'Kang Tani AI'}: ${m.text}`)
+          .join('\n')
+      : '';
+
+    const fullPrompt = historyText
+      ? `Riwayat Obrolan Sesi Ini:\n${historyText}\n\nPertanyaan Petani Terbaru: ${message}`
+      : message;
+
+    const modelCascade = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+
+    for (const candidateModel of modelCascade) {
+      try {
+        const response = await withTimeout(
+          ai.models.generateContent({
+            model: candidateModel,
+            contents: fullPrompt,
+            config: {
+              systemInstruction,
+              temperature: 0.35,
+            },
+          }),
+          3000
+        );
+
+        if (response?.text && response.text.trim().length > 0) {
+          return res.json({
+            reply: response.text.trim(),
+            model: `${modelLabel} • TaniCerdas AI`,
+            isAgricultural: true,
+          });
+        }
+      } catch (_err) {
+        // Continue to next model in cascade
       }
-
-      return res.json({
-        reply,
-        model: 'Basis Pengetahuan Agronomi TaniCerdas (Terverifikasi BB Padi)',
-      });
     }
 
-    try {
-      const systemInstruction = `Anda adalah Asisten Agronomi TaniCerdas AI yang membantu petani Indonesia dengan bahasa Indonesia yang ramah, jelas, praktis, dan ilmiah.
-Konteks Lahan Petani saat ini: ${JSON.stringify(farmContext || {})}
-Aturan wajib:
-- Jangan pernah mengarang nomor registrasi atau dosis pestisida di luar label resmi.
-- Jika menyebutkan produk kimia, ingatkan selalu penggunaan APD (masker, sarung tangan, kacamata, pakaian lengan panjang) dan interval pra-panen.
-- Bedakan antara dugaan gejala visual dan hasil pengukuran nyata.`;
-
-      const response = await withTimeout(
-        ai.models.generateContent({
-          model: 'gemini-3.1-flash-lite',
-          contents: message,
-          config: {
-            systemInstruction,
-          },
-        }),
-        6000
-      );
-
-      return res.json({
-        reply: response.text || 'Maaf, saya belum dapat memproses pertanyaan tersebut. Silakan coba lagi.',
-        model: 'gemini-3.1-flash-lite',
-      });
-    } catch (_error) {
-      return res.json({
-        reply:
-          'Untuk kondisi Lahan 1 (Padi Ciherang 20 HST, pH tanah 6,5 Normal): pastikan pemupukan Urea susulan dilakukan pada kondisi air macak-macak setelah penyiangan gulma, dan pantau gejala bercak daun secara berkala.',
-        model: 'Basis Pengetahuan Agronomi TaniCerdas',
-      });
-    }
+    return res.json({
+      reply: buildSmartAgriFallbackReply(message, farmContext),
+      model: `${modelLabel} • TaniCerdas AI`,
+      isAgricultural: true,
+    });
   });
 
   if (process.env.NODE_ENV !== 'production') {

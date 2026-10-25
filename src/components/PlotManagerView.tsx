@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
 import {
+  AlertTriangle,
   Calendar,
   CheckCircle2,
   ChevronRight,
   Circle,
+  CloudRain,
+  CloudSun,
   Droplets,
   Layers,
   MapPin,
   Plus,
+  RefreshCw,
+  ShieldCheck,
   Sprout,
   Trash2,
+  Wind,
   X,
 } from 'lucide-react';
 import {
   CommodityType,
   FarmPlot,
   PhaseStatus,
+  WeatherSnapshot,
 } from '../types/agronomy';
 import { CropThumbnailIllustration } from './VisualAssets';
 import {
@@ -35,6 +42,9 @@ interface PlotManagerViewProps {
   onUpdatePhaseStatus: (plotId: string, phaseId: string, newStatus: PhaseStatus) => void;
   onNavigateToCamera: (commodity: CommodityType, plotId: string) => void;
   onNavigateToCalendar: (plotId: string) => void;
+  weather?: WeatherSnapshot;
+  isLoadingWeather?: boolean;
+  onRefreshWeather?: () => void;
 }
 
 export const PlotManagerView: React.FC<PlotManagerViewProps> = ({
@@ -47,6 +57,9 @@ export const PlotManagerView: React.FC<PlotManagerViewProps> = ({
   onUpdatePhaseStatus,
   onNavigateToCamera,
   onNavigateToCalendar,
+  weather,
+  isLoadingWeather,
+  onRefreshWeather,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [name, setName] = useState('');
@@ -160,6 +173,74 @@ export const PlotManagerView: React.FC<PlotManagerViewProps> = ({
           <span>Tambah Lahan</span>
         </button>
       </div>
+
+      {/* Live Weather & Field Condition Strip on Lahan Page */}
+      {weather && (
+        <div
+          data-testid="plot-live-weather-strip"
+          className="rounded-2xl bg-gradient-to-r from-[#F0FDF4] via-white to-[#E0F2FE] p-4 border border-emerald-900/15 flex flex-wrap items-center justify-between gap-4"
+        >
+          <div className="flex flex-wrap items-center gap-3.5">
+            <div className="h-11 w-11 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              {weather.conditionText.includes('Hujan') ? (
+                <CloudRain className="h-6 w-6 text-sky-600" />
+              ) : (
+                <CloudSun className="h-6 w-6" />
+              )}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-extrabold text-[#17231B] text-sm tabular-nums">
+                  {weather.tempC}°C · {weather.conditionText}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-[#DCFCE7] text-[#14532D] text-[10px] font-extrabold">
+                  Cuaca Lahan Live
+                </span>
+                <span className="text-[#647067] flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-[#15803D]" />
+                  {weather.locationName}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#4A634D] mt-0.5 tabular-nums">
+                Kelembapan <strong>{weather.humidityPct}%</strong> · Peluang Hujan{' '}
+                <strong>{weather.rainProbabilityPct}%</strong> ({weather.rainfallMm} mm) · Angin{' '}
+                <strong>
+                  {weather.windSpeedKmh} km/jam ({weather.windDirectionCardinal || 'Timur'})
+                </strong>{' '}
+                · Diperbarui: {weather.updatedAt}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold ${
+                weather.sprayingAdvisory.status.toLowerCase().includes('tunda')
+                  ? 'bg-amber-100 text-amber-950 border border-amber-300'
+                  : 'bg-[#DCFCE7] text-[#14532D] border border-emerald-300'
+              }`}
+            >
+              {weather.sprayingAdvisory.status.toLowerCase().includes('tunda') ? (
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-700" />
+              ) : (
+                <ShieldCheck className="h-3.5 w-3.5 text-[#15803D]" />
+              )}
+              {weather.sprayingAdvisory.status}
+            </span>
+            {onRefreshWeather && (
+              <button
+                type="button"
+                onClick={onRefreshWeather}
+                disabled={isLoadingWeather}
+                className="h-9 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-[#17231B] flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoadingWeather ? 'animate-spin' : ''}`} />
+                <span>Segarkan Cuaca</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Split Grid: Left Plot List (Screen 4) + Right 8-Phase Cultivation Plan */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -509,6 +590,7 @@ export const PlotManagerView: React.FC<PlotManagerViewProps> = ({
                     className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#15803D]"
                   >
                     <option value="Padi">Padi (Unggulan)</option>
+                    <option value="Kacang Hijau">Kacang Hijau (Palawija MT2/MT3)</option>
                     <option value="Jagung">Jagung</option>
                     <option value="Cabai">Cabai</option>
                     <option value="Kedelai">Kedelai</option>

@@ -1,12 +1,19 @@
 export type CommodityType =
   | 'Padi'
+  | 'Kacang Hijau'
   | 'Jagung'
   | 'Cabai'
   | 'Kedelai'
   | 'Bawang Merah'
   | 'Tomat'
+  | 'Kentang'
   | 'Kakao'
   | 'Lainnya';
+
+export type PlantingSeasonMT =
+  | 'MT1 Penghujan (Nov–Feb)'
+  | 'MT2 Gadu / Peralihan (Mar–Jun)'
+  | 'MT3 Kemarau / Palawija (Jul–Okt)';
 
 export type PhaseStatus =
   | 'Belum Dimulai'
@@ -33,7 +40,14 @@ export type OfficialDiseaseId =
   | 'kahat_k_fe'
   | 'antraknosa_cabai'
   | 'hawar_daun_jagung'
-  | 'tanaman_sehat';
+  | 'tanaman_sehat'
+  | 'busuk_akar_keracunan_besi'
+  | 'hama_akar_orong_nematoda'
+  | 'akar_sehat_optimal'
+  | 'blas_leher_malai'
+  | 'walang_sangit_gabah'
+  | 'kotor_bulir_gabah';
+
 
 /**
  * Profil Tanaman (Dashboard Plant Profile Management)
@@ -430,16 +444,31 @@ export interface HarvestRecord {
 export interface PesticideProduct {
   id: string;
   productName: string;
+  alternativeBrands?: string[];
   manufacturer: string;
   registrationNumber: string;
   registrationStatus: 'Terdaftar Resmi Kementan RI' | 'Perlu Verifikasi Ulang';
-  category: 'Fungisida' | 'Insektisida' | 'Bakterisida' | 'Bakterisida & Fungisida' | 'Herbisida';
+  category:
+    | 'Fungisida'
+    | 'Insektisida'
+    | 'Bakterisida'
+    | 'Bakterisida & Fungisida'
+    | 'Herbisida'
+    | 'Agensia Hayati & Pembenah Akar'
+    | 'Nutrisi & Pemulihan Fisiologis';
   activeIngredient: string;
   concentration: string;
-  formulation: 'EC (Emulsifiable Concentrate)' | 'WP (Wettable Powder)' | 'SC (Suspension Concentrate)' | 'WG (Water Dispersible Granule)';
+  modeOfActionGroup?: string;
+  formulation:
+    | 'EC (Emulsifiable Concentrate)'
+    | 'WP (Wettable Powder)'
+    | 'SC (Suspension Concentrate)'
+    | 'WG (Water Dispersible Granule)'
+    | 'SG / GR / SL (Granul & Larutan Air)';
   allowedCommodities: CommodityType[];
   targetOrganisms: string[];
   dosagePerLiter: string;
+  dosagePer16LTank?: string;
   dosagePerHaEstimate: string;
   sprayVolumePerHa: string;
   applicationMethod: string;
@@ -453,12 +482,30 @@ export interface PesticideProduct {
   dataVersion: string;
 }
 
+export interface DiagnosisSupportingRecommendation {
+  category:
+    | 'Agensia Hayati & Organik'
+    | 'Pemupukan & Pembenah Tanah/Akar'
+    | 'Perlakuan Fisik & Air'
+    | 'Agensia Hayati & Bio-Pestisida'
+    | 'Pembenah Tanah & Akar'
+    | 'Nutrisi & Pemulihan Fisiologis'
+    | 'Sanitasi & Pengelolaan Air';
+  title: string;
+  activeSubstancesAndBrands: string;
+  materialsAndBrands?: string[];
+  dosageAndApplication: string;
+  agronomicBenefit?: string;
+}
+
 export interface DiagnosisResult {
   id: string;
   timestamp: string;
   plotId?: string;
   commodity: CommodityType;
   plantPart: 'Daun' | 'Batang' | 'Malai / Bunga' | 'Akar' | 'Buah / Gabah' | 'Keseluruhan Tanaman';
+  detectedPlantPartFromPhoto?: 'Daun' | 'Batang' | 'Malai / Bunga' | 'Akar' | 'Buah / Gabah' | 'Keseluruhan Tanaman';
+  organSpecificAnatomyCheck?: string;
   samplePresetId?: string;
   matchedDiseaseId?: OfficialDiseaseId;
   visualObservations?: string;
@@ -471,6 +518,8 @@ export interface DiagnosisResult {
     | 'Penyakit Bakteri'
     | 'Penyakit Virus'
     | 'Serangan Hama'
+    | 'Gangguan Perakaran & Toksisitas Tanah'
+    | 'Hama Perakaran & Tanah'
     | 'Defisiensi Nutrisi'
     | 'Defisiensi Hara'
     | 'Stres Lingkungan / Belum Pasti'
@@ -487,10 +536,12 @@ export interface DiagnosisResult {
   missingInformation: string[];
   followUpFieldChecks: string[];
   nonChemicalIpmActions: string[];
+  biologicalAndSupportingRecommendations?: DiagnosisSupportingRecommendation[];
   verifiedProductIds: string[];
   validationStatus: 'Terverifikasi Basis Pengetahuan Agronomi' | 'Dugaan Awal — Perlu Konfirmasi Penyuluh';
   sourceReferences: string[];
   aiModelUsed: string;
+  geminiAnalysisAnswer?: string;
 }
 
 export interface PestDiseaseCatalogItem {
@@ -565,7 +616,13 @@ export interface WeatherSnapshot {
   locationName: string;
   latitude?: number;
   longitude?: number;
-  locationSource?: 'GPS Browser Akurat' | 'Koordinat Presisi Desa Larikrejo, Kudus';
+  locationSource?:
+    | 'GPS Browser Akurat'
+    | 'Lokasi Terpilih Presisi'
+    | 'Koordinat Presisi Desa Larikrejo, Kudus';
+  gpsAccuracyMeters?: number;
+  gpsPermissionStatus?: 'granted' | 'denied' | 'prompt' | 'manual';
+  gpsErrorMessage?: string;
   bmkgAdm4Code?: string;
   tempC: number;
   apparentTempC?: number;
@@ -608,4 +665,59 @@ export interface UserProfile {
   isLoggedIn: boolean;
   privacyConsentAccepted: boolean;
   createdAt?: string;
+  // Extended Farmer Account & Profile Fields (Full CRUD & Avatar)
+  avatarDataUrl?: string;
+  phoneWhatsapp?: string;
+  email?: string;
+  villageName?: string;
+  districtName?: string;
+  regencyName?: string;
+  provinceName?: string;
+  latitude?: number;
+  longitude?: number;
+  poktanName?: string;
+  kartuTaniNumber?: string;
+  mainCommodity?: CommodityType;
+  irrigationSystem?: 'Teknis' | 'Setengah Teknis' | 'Tadah Hujan';
+  plantingSeasonMT?: PlantingSeasonMT;
+  updatedAt?: string;
+}
+
+export interface OptChemicalGuide {
+  activeIngredient: string;
+  category: 'Fungisida' | 'Bakterisida' | 'Insektisida' | 'Akarisida' | 'Pupuk Daun / Imunitas';
+  registeredBrands: string;
+  dosagePer16LTank: string;
+  dosagePerArea: string;
+  applicationNotes: string;
+}
+
+export interface EpidemiologyOptAlert {
+  id: string;
+  optName: string;
+  scientificName: string;
+  targetCommodity: CommodityType | 'Padi & Palawija';
+  category: 'Penyakit Jamur' | 'Penyakit Bakteri' | 'Serangan Hama' | 'Kompleks Hama & Jamur Palawija';
+  riskLevel: 'Tinggi / Siaga' | 'Waspada' | 'Terkendali';
+  riskScorePct: number;
+  plantingSeasonMT: PlantingSeasonMT;
+  cropAgeHstLabel: string;
+  weatherTriggerHeadline: string;
+  // 6 Comprehensive Solution Sections for Farmer Popup Modal
+  whyItThreatensNow: string;
+  earlyFieldSymptoms: string[];
+  culturalPreventionSteps: string[];
+  biologicalOrganicControl: {
+    agentName: string;
+    practicalDosage: string;
+    applicationMethod: string;
+  }[];
+  chemicalControlGuides: OptChemicalGuide[];
+  bestSprayingWindowToday: {
+    statusLabel: string;
+    recommendedHours: string;
+    weatherReasoning: string;
+  };
+  recommendedAgendaTaskTitle: string;
+  recommendedAgendaDosageNote: string;
 }

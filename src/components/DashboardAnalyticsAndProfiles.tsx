@@ -22,16 +22,24 @@ import {
 } from 'lucide-react';
 import {
   AiPredictiveAlert,
+  CommodityType,
   CropProfile,
   DiagnosisResult,
+  EpidemiologyOptAlert,
   FarmPlot,
   HeatmapSector,
+  PlantingSeasonMT,
   WeatherSnapshot,
 } from '../types/agronomy';
 import {
   buildIntelligentDiagnosisRecommendationSummary,
   generatePredictiveAiAlerts,
 } from '../utils/agronomyCalculations';
+import {
+  detectDefaultPlantingSeasonMT,
+  generateRealTimeEpidemiologyOptAlerts,
+} from '../utils/epidemiologyOptEngine';
+import { OptSolutionPopupModal } from './OptSolutionPopupModal';
 
 interface TelemetryPoint {
   dateLabel: string;
@@ -64,9 +72,12 @@ interface DashboardAnalyticsAndProfilesProps {
   latestDiagnosis?: DiagnosisResult | null;
   diagnosisHistory?: DiagnosisResult[];
   isNewPriorityDiagnosis?: boolean;
+  plantingSeasonMT?: PlantingSeasonMT;
+  mainCommodity?: CommodityType;
   onSaveCropProfile: (profile: CropProfile) => void;
   onDeleteCropProfile: (profileId: string) => void;
   onScheduleAlertAction: (alert: AiPredictiveAlert) => void;
+  onAddOptSprayToAgenda?: (alert: EpidemiologyOptAlert) => void;
   onOpenCameraDiagnosis?: () => void;
 }
 
@@ -81,9 +92,12 @@ export const DashboardAnalyticsAndProfiles: React.FC<DashboardAnalyticsAndProfil
   latestDiagnosis,
   diagnosisHistory,
   isNewPriorityDiagnosis = false,
+  plantingSeasonMT,
+  mainCommodity,
   onSaveCropProfile,
   onDeleteCropProfile,
   onScheduleAlertAction,
+  onAddOptSprayToAgenda,
   onOpenCameraDiagnosis,
 }) => {
   // Plant Profile Modal & Form State
@@ -162,6 +176,29 @@ export const DashboardAnalyticsAndProfiles: React.FC<DashboardAnalyticsAndProfil
   const [selectedSector, setSelectedSector] = useState<HeatmapSector>(
     heatmapSectors.find((s) => (s as any).riskCategory === 'Perhatian Tinggi') || heatmapSectors[0]
   );
+
+  // Real-Time Epidemiological OPT Early Warning State & Popup Modal
+  const [selectedSeasonMT, setSelectedSeasonMT] = useState<PlantingSeasonMT>(
+    plantingSeasonMT || detectDefaultPlantingSeasonMT()
+  );
+  const [selectedOptAlertModal, setSelectedOptAlertModal] = useState<EpidemiologyOptAlert | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (plantingSeasonMT) {
+      setSelectedSeasonMT(plantingSeasonMT);
+    }
+  }, [plantingSeasonMT]);
+
+  const realTimeOptAlerts = useMemo(() => {
+    return generateRealTimeEpidemiologyOptAlerts({
+      weather,
+      plots,
+      plantingSeasonMT: selectedSeasonMT,
+      mainCommodity,
+    });
+  }, [weather, plots, selectedSeasonMT, mainCommodity]);
 
   const predictiveAlerts = useMemo(() => {
     return generatePredictiveAiAlerts({
@@ -333,6 +370,154 @@ export const DashboardAnalyticsAndProfiles: React.FC<DashboardAnalyticsAndProfil
 
   return (
     <div className="space-y-4">
+      {/* =====================================================================
+          0. PREDIKSI RISIKO OPT (HAMA & PENYAKIT) REAL-TIME BERBASIS CUACA,
+             KELEMBAPAN & KALENDER MUSIM TANAM LOKAL + POPUP SOLUSI KOMPREHENSIF
+         ===================================================================== */}
+      <section
+        aria-label="Prediksi Risiko OPT Real-Time"
+        data-testid="realtime-opt-early-warning-section"
+        className="bg-white rounded-2xl border-2 border-[#15803D]/30 p-4 sm:p-5 shadow-sm space-y-4"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FEF2F2] border border-red-200 flex items-center justify-center text-[#DC2626] shrink-0 mt-0.5">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm sm:text-base font-extrabold text-[#142615]">
+                  Prediksi Risiko OPT (Hama & Penyakit) Real-Time
+                </h3>
+                <span className="px-2 py-0.5 rounded-md bg-[#DCFCE7] text-[#14532D] text-[10px] font-extrabold uppercase tracking-wider">
+                  Epidemiologi Cuaca Live & Musim Tanam
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-[#4A634D] mt-0.5">
+                Dihitung dinamis dari cuaca live {weather.locationName} (Suhu{' '}
+                <strong>{weather.tempC}°C</strong>, Kelembapan{' '}
+                <strong>{weather.humidityPct}%</strong>, Hujan{' '}
+                <strong>{weather.rainfallMm} mm</strong>, Angin{' '}
+                <strong>{weather.windSpeedKmh} km/jam</strong>) & umur tanaman. Klik kartu untuk
+                membuka <strong>Popup Solusi Lengkap & Takaran Obat Tangki 16L</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="dashboard-season-mt-select" className="text-[11px] font-bold text-[#142615]">
+              Musim Tanam:
+            </label>
+            <select
+              id="dashboard-season-mt-select"
+              data-testid="select-dashboard-season-mt"
+              value={selectedSeasonMT}
+              onChange={(e) => setSelectedSeasonMT(e.target.value as PlantingSeasonMT)}
+              className="h-9 px-3 rounded-xl border border-[#DCE8DC] bg-[#F7FAF6] text-xs font-bold text-[#14532D]"
+            >
+              <option value="MT1 Penghujan (Nov–Feb)">MT1 Penghujan (Nov–Feb)</option>
+              <option value="MT2 Gadu / Peralihan (Mar–Jun)">MT2 Gadu / Peralihan (Mar–Jun)</option>
+              <option value="MT3 Kemarau / Palawija (Jul–Okt)">
+                MT3 Kemarau / Palawija (Jul–Okt)
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          {realTimeOptAlerts.map((opt) => {
+            const isHigh = opt.riskLevel === 'Tinggi / Siaga';
+            const isMed = opt.riskLevel === 'Waspada';
+            return (
+              <div
+                key={opt.id}
+                onClick={() => setSelectedOptAlertModal(opt)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedOptAlertModal(opt);
+                  }
+                }}
+                data-testid={`opt-alert-card-${opt.id}`}
+                className={`rounded-2xl border p-4 flex flex-col justify-between transition-all cursor-pointer ${
+                  isHigh
+                    ? 'bg-gradient-to-br from-[#FFF5F5] via-white to-[#FFFBEB] border-red-300 hover:border-[#DC2626] shadow-2xs'
+                    : isMed
+                    ? 'bg-gradient-to-br from-[#FFFBEB] via-white to-[#F0FDF4] border-amber-300 hover:border-amber-500'
+                    : 'bg-[#F8FBF8] border-[#DCE8DC] hover:border-[#15803D]'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider ${
+                          isHigh
+                            ? 'bg-[#DC2626] text-white'
+                            : isMed
+                            ? 'bg-[#D97706] text-white'
+                            : 'bg-[#15803D] text-white'
+                        }`}
+                      >
+                        Risiko {opt.riskLevel} ({opt.riskScorePct}%)
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-extrabold text-[#14532D]">
+                        {opt.targetCommodity}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#5B735E]">
+                        {opt.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#142615] leading-snug">
+                      {opt.optName}
+                    </h4>
+                    <p className="text-[11px] italic text-[#4A634D]">{opt.scientificName}</p>
+                  </div>
+
+                  <div className="rounded-lg bg-white/90 border border-slate-200/80 px-2.5 py-1.5 text-[11px] font-semibold text-sky-950">
+                    Pemicu Cuaca: <span className="font-bold">{opt.weatherTriggerHeadline}</span>
+                  </div>
+
+                  <p className="text-[11px] text-[#3B523D] line-clamp-2 leading-relaxed">
+                    {opt.whyItThreatensNow}
+                  </p>
+
+                  <div className="rounded-lg bg-[#F0FDF4] border border-emerald-200 px-2.5 py-1.5 text-[11px]">
+                    <span className="font-extrabold text-[#14532D]">Solusi Cepat & Obat 16L: </span>
+                    <span className="text-[#17231B]">
+                      {opt.chemicalControlGuides[0]?.registeredBrands} (
+                      {opt.chemicalControlGuides[0]?.dosagePer16LTank})
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold text-[#15803D] tabular-nums">
+                    Jam Semprot: {opt.bestSprayingWindowToday.recommendedHours}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOptAlertModal(opt);
+                    }}
+                    data-testid={`btn-open-opt-solution-${opt.id}`}
+                    className="px-3 py-1.5 rounded-xl bg-[#15803D] hover:bg-[#14532D] text-white text-[11px] font-extrabold transition-colors cursor-pointer whitespace-nowrap shadow-2xs"
+                  >
+                    Lihat Solusi Lengkap & Cara Mengatasi →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* =====================================================================
           1. PERINGATAN DINI AI (PREDIKSI PENYAKIT, AIR, HAMA & SARAN TINDAKAN)
          ===================================================================== */}
@@ -1319,6 +1504,40 @@ export const DashboardAnalyticsAndProfiles: React.FC<DashboardAnalyticsAndProfil
           </div>
         </div>
       )}
+
+      {/* POPUP SOLUSI KOMPREHENSIF OPT (6 SEKSI LENGKAP UNTUK PETANI) */}
+      <OptSolutionPopupModal
+        alert={selectedOptAlertModal}
+        weather={weather}
+        onClose={() => setSelectedOptAlertModal(null)}
+        onAddSprayToAgenda={(optAlert) => {
+          if (onAddOptSprayToAgenda) {
+            onAddOptSprayToAgenda(optAlert);
+          } else {
+            onScheduleAlertAction({
+              id: `ai-opt-${optAlert.id}-${Date.now()}`,
+              severity: optAlert.riskLevel === 'Tinggi / Siaga' ? 'Tinggi' : 'Sedang',
+              category: 'Risiko Penyakit',
+              riskCategory: 'Penyakit Tanaman',
+              confidencePct: optAlert.riskScorePct,
+              title: optAlert.recommendedAgendaTaskTitle,
+              targetName: optAlert.optName,
+              cropName: String(optAlert.targetCommodity),
+              plotId: plots[0]?.id || 'lahan-1',
+              predictionSummary: optAlert.whyItThreatensNow,
+              predictedTrigger: optAlert.weatherTriggerHeadline,
+              triggerFactors: [optAlert.weatherTriggerHeadline],
+              actionableSteps: [optAlert.recommendedAgendaDosageNote],
+              recommendedTaskTitle: optAlert.recommendedAgendaTaskTitle,
+              sourceBasis: 'Mesin Epidemiologi OPT Real-Time',
+              createdAt: new Date().toISOString(),
+            });
+          }
+        }}
+        onOpenCameraDiagnosis={() => {
+          if (onOpenCameraDiagnosis) onOpenCameraDiagnosis();
+        }}
+      />
     </div>
   );
 };

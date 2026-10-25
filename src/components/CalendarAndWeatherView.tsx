@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import {
+  AlertTriangle,
   Bell,
-  Calendar as CalendarIcon,
   CheckCircle2,
   Circle,
   CloudRain,
   CloudSun,
+  Compass,
   Droplets,
   MapPin,
+  Navigation,
   Plus,
   RefreshCw,
+  ShieldCheck,
+  Search,
   Sun,
-  Thermometer,
   Wind,
   X,
 } from 'lucide-react';
@@ -23,6 +26,10 @@ import {
   WeatherSnapshot,
 } from '../types/agronomy';
 import { evaluateSoilParameters, formatIndonesianDate } from '../utils/agronomyCalculations';
+import {
+  BMKG_ADMIN_REGION_PRESETS,
+  searchIndonesianLocationCoordinates,
+} from '../services/liveWeatherService';
 
 interface CalendarAndWeatherViewProps {
   plots: FarmPlot[];
@@ -33,7 +40,17 @@ interface CalendarAndWeatherViewProps {
   onAddTask: (task: ScheduledTask) => void;
   weather: WeatherSnapshot;
   isLoadingWeather: boolean;
-  onRefreshWeather: () => void;
+  onRefreshWeather: (options?: {
+    forceGps?: boolean;
+    customCoords?: {
+      latitude: number;
+      longitude: number;
+      locationName?: string;
+      bmkgAdm4Code?: string;
+      source?: WeatherSnapshot['locationSource'];
+    };
+    providerMode?: 'open-meteo' | 'bmkg-hybrid';
+  }) => void;
   onUpdateSoilObservation: (plotId: string, obs: SoilObservation) => void;
   remindersActive: boolean;
   onToggleReminders: () => void;
@@ -53,20 +70,72 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
   remindersActive,
   onToggleReminders,
 }) => {
-  const [commodityFilter, setCommodityFilter] = useState<'Semua' | CommodityType>('Padi');
+  const [commodityFilter, setCommodityFilter] = useState<'Semua' | CommodityType>('Semua');
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskCategory, setNewTaskCategory] = useState<ScheduledTask['category']>('Pemupukan');
-  const [newTaskDate, setNewTaskDate] = useState('2025-05-05');
+  const [newTaskDate, setNewTaskDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [newTaskTime, setNewTaskTime] = useState('06:30 – 08:30');
   const [newTaskNote, setNewTaskNote] = useState('');
+
+  const [selectedProvider, setSelectedProvider] = useState<'bmkg-hybrid' | 'open-meteo'>(
+    weather.providerMode || 'bmkg-hybrid'
+  );
+  const [selectedPresetCode, setSelectedPresetCode] = useState<string>(
+    weather.bmkgAdm4Code || BMKG_ADMIN_REGION_PRESETS[0].bmkgAdm4Code
+  );
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [locationSearchResults, setLocationSearchResults] = useState<
+    Array<{
+      id: string;
+      name: string;
+      fullName: string;
+      latitude: number;
+      longitude: number;
+    }>
+  >([]);
+
+  const handleSearchLocation = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (locationSearchQuery.trim().length < 2) return;
+    setIsSearchingLocation(true);
+    try {
+      const results = await searchIndonesianLocationCoordinates(locationSearchQuery);
+      setLocationSearchResults(results);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleSelectSearchedLocation = (item: {
+    fullName: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    setLocationSearchResults([]);
+    setLocationSearchQuery('');
+    onRefreshWeather({
+      customCoords: {
+        latitude: item.latitude,
+        longitude: item.longitude,
+        locationName: item.fullName,
+        source: 'Lokasi Terpilih Presisi',
+      },
+      providerMode: selectedProvider,
+    });
+  };
 
   const activePlot = plots.find((p) => p.id === selectedPlotId) || plots[0];
 
   const [phInput, setPhInput] = useState(String(activePlot?.soilObservation.ph ?? 6.5));
-  const [moistureInput, setMoistureInput] = useState(String(activePlot?.soilObservation.moisturePct ?? 62));
-  const [tempInput, setTempInput] = useState(String(activePlot?.soilObservation.soilTempC ?? 23));
-  const [sourceInput, setSourceInput] = useState<SoilObservation['sourceType']>('Alat Ukur Tanah / pH Meter');
+  const [moistureInput, setMoistureInput] = useState(
+    String(activePlot?.soilObservation.moisturePct ?? 62)
+  );
+  const [tempInput, setTempInput] = useState(String(activePlot?.soilObservation.soilTempC ?? 24));
+  const [sourceInput, setSourceInput] = useState<SoilObservation['sourceType']>(
+    'Alat Ukur Tanah / pH Meter'
+  );
   const [soilSavedMsg, setSoilSavedMsg] = useState<string | null>(null);
 
   const filteredTasks = tasks.filter((t) => {
@@ -77,8 +146,12 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
   const soilEval = evaluateSoilParameters(
     activePlot?.soilObservation.ph ?? 6.5,
     activePlot?.soilObservation.moisturePct ?? 62,
-    activePlot?.soilObservation.soilTempC ?? 23
+    activePlot?.soilObservation.soilTempC ?? 24
   );
+
+  const isWeatherCondusive =
+    weather.sprayingAdvisory.isCondusive ??
+    !weather.sprayingAdvisory.status.toLowerCase().includes('tunda');
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,13 +183,14 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
     if (!activePlot) return;
     const phVal = Math.min(9.5, Math.max(3.5, parseFloat(phInput) || 6.5));
     const moistVal = Math.min(100, Math.max(5, Math.round(parseFloat(moistureInput) || 62)));
-    const tempVal = Math.min(45, Math.max(10, Math.round(parseFloat(tempInput) || 23)));
+    const tempVal = Math.min(45, Math.max(10, Math.round(parseFloat(tempInput) || 24)));
 
     const evalRes = evaluateSoilParameters(phVal, moistVal, tempVal);
     onUpdateSoilObservation(activePlot.id, {
       id: `soil-${Date.now()}`,
       plotId: activePlot.id,
-      recordedAt: 'Baru saja diperbarui',
+      recordedAt:
+        new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
       ph: phVal,
       moisturePct: moistVal,
       soilTempC: tempVal,
@@ -128,9 +202,25 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
     setTimeout(() => setSoilSavedMsg(null), 4000);
   };
 
+  const handleRegionPresetChange = (adm4Code: string) => {
+    setSelectedPresetCode(adm4Code);
+    const preset = BMKG_ADMIN_REGION_PRESETS.find((r) => r.bmkgAdm4Code === adm4Code);
+    if (preset) {
+      onRefreshWeather({
+        customCoords: {
+          latitude: preset.latitude,
+          longitude: preset.longitude,
+          locationName: preset.label,
+          bmkgAdm4Code: preset.bmkgAdm4Code,
+        },
+        providerMode: selectedProvider,
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Main 2-Column Split: Screen 8 (Kalender Tanam & Pengingat) + Screen 9 (Data Cuaca & Kondisi Lahan) */}
+      {/* Main 2-Column Split: Screen 8 (Kalender Tanam & Pengingat) + Screen 9 (Data Cuaca & Kondisi Lahan Live) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Screen 8 — Kalender Tanam & Jadwal Kegiatan */}
         <div className="lg:col-span-6 rounded-2xl bg-white p-5 border border-slate-200 space-y-5">
@@ -151,14 +241,14 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
             </button>
           </div>
 
-          {/* Commodity Filter Tabs (Layar 8: Padi, Jagung, Cabai, Semua) */}
+          {/* Commodity Filter Tabs (Padi, Kacang Hijau, Jagung, Cabai, Semua) */}
           <div className="flex flex-wrap items-center gap-1.5 bg-[#F7FAF7] p-1.5 rounded-xl border border-slate-200">
-            {(['Padi', 'Jagung', 'Cabai', 'Semua'] as const).map((item) => (
+            {(['Semua', 'Padi', 'Kacang Hijau', 'Jagung', 'Cabai'] as const).map((item) => (
               <button
                 key={item}
                 type="button"
                 onClick={() => setCommodityFilter(item as any)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   commodityFilter === item
                     ? 'bg-[#15803D] text-white shadow-sm'
                     : 'text-[#647067] hover:text-[#17231B]'
@@ -169,7 +259,7 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
             ))}
           </div>
 
-          {/* Active Plot Progress Banner (Screen 8: Padi - Lahan 1 · Varietas: Ciherang · Tanam: 12 Apr 2025) */}
+          {/* Active Plot Progress Banner */}
           {activePlot && (
             <div className="rounded-2xl bg-[#F7FAF7] p-4 border border-slate-200">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -196,12 +286,9 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                 </select>
               </div>
 
-              {/* Phase Progress Bar matching Screen 8 */}
               <div className="mt-4">
                 <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-[#15803D]">
-                    Fase {activePlot.currentPhaseName}
-                  </span>
+                  <span className="text-[#15803D]">Fase {activePlot.currentPhaseName}</span>
                   <span className="text-[#17231B] tabular-nums">
                     Estimasi Panen: ± 90 HST ({formatIndonesianDate(activePlot.estimatedHarvestDate)})
                   </span>
@@ -210,7 +297,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                   <div
                     className="h-full rounded-full bg-[#15803D] transition-all"
                     style={{
-                      width: `${Math.min(100, Math.max(12, Math.round((activePlot.currentHst / 90) * 100)))}%`,
+                      width: `${Math.min(
+                        100,
+                        Math.max(12, Math.round((activePlot.currentHst / 90) * 100))
+                      )}%`,
                     }}
                   />
                 </div>
@@ -218,7 +308,7 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
             </div>
           )}
 
-          {/* Jadwal Kegiatan List (Screen 8) */}
+          {/* Jadwal Kegiatan List */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-[#17231B]">Jadwal Kegiatan</h3>
@@ -280,7 +370,7 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
             </div>
           </div>
 
-          {/* Pengingat Aktif Button matching Screen 8 bottom */}
+          {/* Pengingat Aktif Button */}
           <button
             type="button"
             onClick={onToggleReminders}
@@ -302,57 +392,289 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
           </button>
         </div>
 
-        {/* Right Column: Screen 9 — Data Cuaca & Kondisi Lahan */}
-        <div className="lg:col-span-6 rounded-2xl bg-white p-5 border border-slate-200 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Right Column: Screen 9 — Data Cuaca & Kondisi Lahan (Live Multi-Source BMKG & Open-Meteo) */}
+        <div
+          className="lg:col-span-6 rounded-2xl bg-white p-5 border border-slate-200 space-y-5"
+          data-testid="live-weather-module"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-[#17231B]">Data Cuaca & Kondisi Lahan</h2>
-              <p className="text-xs text-[#647067] flex items-center gap-1 mt-0.5">
-                <MapPin className="h-3.5 w-3.5 text-[#15803D]" />
-                <span>{weather.locationName}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-bold text-[#17231B]">Data Cuaca & Kondisi Lahan</h2>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCFCE7] text-[#14532D] text-[10px] font-extrabold uppercase tracking-wider">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#15803D] animate-pulse" />
+                  LIVE API
+                </span>
+              </div>
+              <p className="text-xs text-[#647067] flex flex-wrap items-center gap-1.5 mt-1">
+                <MapPin className="h-3.5 w-3.5 text-[#15803D] shrink-0" />
+                <strong className="text-[#17231B]" data-testid="weather-location-name">
+                  {weather.locationName}
+                </strong>
+                {typeof weather.latitude === 'number' && typeof weather.longitude === 'number' && (
+                  <span className="text-[11px] text-[#647067] tabular-nums">
+                    ({weather.latitude.toFixed(3)}, {weather.longitude.toFixed(3)})
+                  </span>
+                )}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onRefreshWeather}
-              disabled={isLoadingWeather}
-              aria-label="Segarkan data cuaca"
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-[#F7FAF7] hover:bg-slate-100 px-3 text-xs font-semibold text-[#17231B] cursor-pointer"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingWeather ? 'animate-spin' : ''}`} />
-              <span>Segarkan API</span>
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onRefreshWeather({ forceGps: true, providerMode: selectedProvider })}
+                disabled={isLoadingWeather}
+                title="Deteksi titik koordinat GPS aktual perangkat Anda"
+                className="flex h-9 items-center gap-1.5 rounded-xl border border-[#15803D]/30 bg-[#F0FDF4] hover:bg-[#DCFCE7] px-3 text-xs font-bold text-[#14532D] cursor-pointer"
+              >
+                <Navigation className="h-3.5 w-3.5 text-[#15803D]" />
+                <span>Aktifkan GPS Saya</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onRefreshWeather({ providerMode: selectedProvider })}
+                disabled={isLoadingWeather}
+                aria-label="Segarkan data cuaca"
+                data-testid="btn-refresh-weather-api"
+                className="flex h-9 items-center gap-1.5 rounded-xl bg-[#15803D] hover:bg-[#14532D] px-3.5 text-xs font-bold text-white cursor-pointer"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoadingWeather ? 'animate-spin' : ''}`} />
+                <span>{isLoadingWeather ? 'Memuat...' : 'Segarkan API'}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Current Weather Hero Card (Screen 9: 28°C Cerah Berawan · Kelembapan 68% · Curah Hujan 2 mm · Angin 12 km/jam) */}
-          <div className="rounded-2xl bg-gradient-to-br from-[#F0FDF4] via-white to-[#E0F2FE] p-5 border border-emerald-900/10">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* STATUS AKURASI LOKASI & WAJIB AKTIFKAN GPS PERANGKAT */}
+          {weather.locationSource === 'GPS Browser Akurat' ? (
+            <div className="rounded-xl bg-[#DCFCE7]/70 border border-[#15803D]/30 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#14532D]">
+                <ShieldCheck className="h-4 w-4 text-[#15803D] shrink-0" />
+                <span>
+                  <strong>GPS Perangkat Aktif & Akurat</strong>
+                  {weather.gpsAccuracyMeters ? ` (±${weather.gpsAccuracyMeters} meter)` : ''} — Cuaca terkunci pada titik koordinat riil perangkat Anda.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onRefreshWeather({ forceGps: true, providerMode: selectedProvider })}
+                className="text-[11px] font-bold text-[#15803D] hover:underline cursor-pointer"
+              >
+                Kalibrasi Ulang GPS →
+              </button>
+            </div>
+          ) : weather.locationSource === 'Lokasi Terpilih Presisi' ? (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#14532D]">
+                <MapPin className="h-4 w-4 text-[#15803D] shrink-0" />
+                <span>
+                  <strong>Titik Lokasi Lahan Terkunci Presisi</strong> ({weather.latitude?.toFixed(4)}, {weather.longitude?.toFixed(4)}) — Cuaca disesuaikan dengan lokasi terpilih.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onRefreshWeather({ forceGps: true, providerMode: selectedProvider })}
+                className="text-[11px] font-bold text-[#15803D] hover:underline cursor-pointer"
+              >
+                Gunakan GPS Perangkat →
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-amber-50 border border-amber-300 p-3.5 space-y-2 text-xs">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5 text-amber-950">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold block">
+                      Perangkat Wajib Mengaktifkan Lokasi (GPS) untuk Akurasi Cuaca Lahan
+                    </strong>
+                    <p className="text-[11px] text-amber-900 mt-0.5 leading-relaxed">
+                      {weather.gpsErrorMessage ||
+                        'Agar suhu, peluang hujan, dan rekomendasi penyemprotan 100% akurat sesuai posisi sawah/perangkat Anda, wajib aktifkan izin Lokasi (GPS) pada perangkat/browser Anda atau cari nama desa/kecamatan Anda di bawah.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onRefreshWeather({ forceGps: true, providerMode: selectedProvider })}
+                  className="px-3 py-1.5 rounded-lg bg-[#15803D] hover:bg-[#14532D] text-white text-xs font-bold shrink-0 cursor-pointer"
+                >
+                  Aktifkan GPS Sekarang
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Pencarian Titik Koordinat Desa / Kecamatan / Kabupaten Seluruh Indonesia */}
+          <div className="bg-[#F7FAF7] p-3 rounded-xl border border-slate-200 space-y-2.5 text-xs">
+            <form onSubmit={handleSearchLocation} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="h-3.5 w-3.5 text-[#647067] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={locationSearchQuery}
+                  onChange={(e) => setLocationSearchQuery(e.target.value)}
+                  placeholder="Cari nama Desa / Kecamatan / Kabupaten Anda (misal: Undaan, Subang, Ngawi, Klaten)..."
+                  className="w-full h-9 pl-8 pr-3 rounded-lg border border-slate-200 bg-white text-xs text-[#17231B] focus:border-[#15803D] focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSearchingLocation || locationSearchQuery.trim().length < 2}
+                className="h-9 px-3.5 rounded-lg bg-[#15803D] hover:bg-[#14532D] disabled:bg-slate-300 text-white text-xs font-bold cursor-pointer shrink-0"
+              >
+                {isSearchingLocation ? 'Mencari...' : 'Cari Lokasi'}
+              </button>
+            </form>
+
+            {locationSearchResults.length > 0 && (
+              <div className="rounded-lg bg-white border border-slate-200 divide-y divide-slate-100 max-h-44 overflow-y-auto">
+                {locationSearchResults.map((resItem) => (
+                  <button
+                    key={resItem.id}
+                    type="button"
+                    onClick={() => handleSelectSearchedLocation(resItem)}
+                    className="w-full px-3 py-2 text-left hover:bg-[#F0FDF4] flex items-center justify-between gap-2 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <MapPin className="h-3.5 w-3.5 text-[#15803D] shrink-0" />
+                      <span className="font-semibold text-[#17231B] truncate">
+                        {resItem.fullName}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-[#647067] tabular-nums shrink-0">
+                      {resItem.latitude.toFixed(3)}, {resItem.longitude.toFixed(3)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <div>
+                <label
+                  htmlFor="weather-region-select"
+                  className="block text-[10px] font-bold uppercase text-[#647067] mb-1"
+                >
+                  Wilayah Lahan Cepat / Kode BMKG (adm4)
+                </label>
+                <select
+                  id="weather-region-select"
+                  value={selectedPresetCode}
+                  onChange={(e) => handleRegionPresetChange(e.target.value)}
+                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-[#17231B]"
+                >
+                  {BMKG_ADMIN_REGION_PRESETS.map((reg) => (
+                    <option key={reg.bmkgAdm4Code} value={reg.bmkgAdm4Code}>
+                      {reg.label} ({reg.bmkgAdm4Code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="weather-provider-select"
+                  className="block text-[10px] font-bold uppercase text-[#647067] mb-1"
+                >
+                  Sumber Mesin Cuaca Terverifikasi
+                </label>
+                <select
+                  id="weather-provider-select"
+                  value={selectedProvider}
+                  onChange={(e) => {
+                    const nextMode = e.target.value as 'bmkg-hybrid' | 'open-meteo';
+                    setSelectedProvider(nextMode);
+                    onRefreshWeather({ providerMode: nextMode });
+                  }}
+                  className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-[#17231B]"
+                >
+                  <option value="bmkg-hybrid">
+                    BMKG Terbuka + Open-Meteo Forecast (Terverifikasi)
+                  </option>
+                  <option value="open-meteo">
+                    Open-Meteo High-Resolution Seamless (Asia/Jakarta)
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Weather Hero Card */}
+          <div className="rounded-2xl bg-gradient-to-br from-[#F0FDF4] via-white to-[#E0F2FE] p-5 border border-emerald-900/15 space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl bg-amber-100/80 flex items-center justify-center text-amber-500">
-                  <CloudSun className="h-10 w-10" />
+                <div className="h-16 w-16 rounded-2xl bg-amber-100/80 flex items-center justify-center text-amber-500 shrink-0">
+                  {weather.conditionText.includes('Hujan') ? (
+                    <CloudRain className="h-10 w-10 text-sky-600" />
+                  ) : weather.conditionText === 'Cerah' ? (
+                    <Sun className="h-10 w-10 text-amber-500" />
+                  ) : (
+                    <CloudSun className="h-10 w-10 text-amber-500" />
+                  )}
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-[#17231B] tabular-nums">
-                    {weather.tempC}°C
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className="text-3xl font-extrabold text-[#17231B] tabular-nums"
+                      data-testid="weather-current-temp"
+                    >
+                      {weather.tempC}°C
+                    </span>
+                    <span className="text-xs font-semibold text-[#647067] tabular-nums">
+                      Terasa {weather.apparentTempC ?? weather.tempC}°C
+                    </span>
                   </div>
-                  <div className="text-sm font-semibold text-[#17231B]">{weather.conditionText}</div>
-                  <div className="text-[11px] text-[#647067] mt-0.5">
-                    Diperbarui: {weather.updatedAt} · {weather.sourceName}
+                  <div className="text-sm font-bold text-[#17231B] mt-0.5">
+                    {weather.conditionText}
+                  </div>
+                  <div
+                    className="text-[11px] text-[#647067] mt-0.5 tabular-nums"
+                    data-testid="weather-updated-timestamp"
+                  >
+                    Diperbarui: <strong className="text-[#17231B]">{weather.updatedAt}</strong> ·{' '}
+                    {weather.sourceName}
                   </div>
                 </div>
               </div>
 
-              <div className="text-right">
-                <span className="text-xs font-semibold text-[#15803D] block">
+              <div className="text-left sm:text-right">
+                <span
+                  data-testid="weather-advisory-status"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold ${
+                    isWeatherCondusive
+                      ? 'bg-[#DCFCE7] text-[#14532D] border border-emerald-300'
+                      : 'bg-amber-100 text-amber-950 border border-amber-300'
+                  }`}
+                >
+                  {isWeatherCondusive ? (
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#15803D]" />
+                  ) : (
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-700" />
+                  )}
                   Rekomendasi Cuaca: {weather.sprayingAdvisory.status}
                 </span>
-                <span className="text-[11px] text-[#647067] tabular-nums">
-                  Peluang hujan: {weather.rainProbabilityPct}%
+                <span className="text-xs font-bold text-sky-800 tabular-nums block mt-1">
+                  Peluang hujan hari ini: {weather.rainProbabilityPct}% (Curah hujan:{' '}
+                  {weather.rainfallMm} mm)
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-200/70 text-center">
+            {/* Dynamic Agronomic Spraying & Fertilizing Advisory Box */}
+            <div
+              className={`rounded-xl p-3 text-xs leading-relaxed border ${
+                isWeatherCondusive
+                  ? 'bg-[#F0FDF4] border-emerald-200 text-[#14532D]'
+                  : 'bg-amber-50/90 border-amber-300 text-amber-950'
+              }`}
+            >
+              <strong className="font-extrabold block mb-0.5">
+                 Panduan Penyemprotan & Pemupukan Real-Time:
+              </strong>
+              <span>{weather.sprayingAdvisory.recommendation}</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-200/70 text-center">
               <div>
                 <span className="text-xs text-[#647067] flex items-center justify-center gap-1">
                   <Droplets className="h-3.5 w-3.5 text-sky-600" />
@@ -374,25 +696,85 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
               <div>
                 <span className="text-xs text-[#647067] flex items-center justify-center gap-1">
                   <Wind className="h-3.5 w-3.5 text-sky-600" />
-                  Angin
+                  Kecepatan Angin
                 </span>
                 <strong className="text-sm font-bold text-[#17231B] tabular-nums mt-0.5 block">
                   {weather.windSpeedKmh} km/jam
                 </strong>
               </div>
+              <div>
+                <span className="text-xs text-[#647067] flex items-center justify-center gap-1">
+                  <Compass className="h-3.5 w-3.5 text-sky-600" />
+                  Arah Angin
+                </span>
+                <strong className="text-sm font-bold text-[#17231B] tabular-nums mt-0.5 block">
+                  {weather.windDirectionCardinal || 'Timur'}{' '}
+                  {typeof weather.windDirectionDeg === 'number'
+                    ? `(${weather.windDirectionDeg}°)`
+                    : ''}
+                </strong>
+              </div>
             </div>
           </div>
 
-          {/* Prakiraan 5 Hari ke Depan (Screen 9: Sen, Sel, Rab, Kam, Jum) */}
+          {/* Hourly Forecast Strip (if available from Open-Meteo Live) */}
+          {Array.isArray(weather.hourlyForecast) && weather.hourlyForecast.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#647067] mb-2">
+                Prakiraan Per Jam Hari Ini (Jendela Semprot & Hujan)
+              </h3>
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                {weather.hourlyForecast.slice(0, 8).map((hr, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl bg-[#F7FAF7] border border-slate-200/80 p-2 text-center tabular-nums"
+                  >
+                    <span className="text-[10px] font-bold text-[#647067] block">
+                      {hr.hourLabel}
+                    </span>
+                    <span className="text-xs font-extrabold text-[#17231B] block mt-1">
+                      {hr.tempC}°C
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold block mt-0.5 ${
+                        hr.rainProbabilityPct > 55 ? 'text-sky-700' : 'text-[#15803D]'
+                      }`}
+                    >
+                      {hr.rainProbabilityPct}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Prakiraan 5–7 Hari ke Depan (Dynamic Intl.DateTimeFormat Dates) */}
           <div>
-            <h3 className="text-sm font-bold text-[#17231B] mb-2.5">Prakiraan 5 Hari ke Depan</h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="flex items-center justify-between mb-2.5">
+              <h3 className="text-sm font-bold text-[#17231B]">
+                Prakiraan {weather.forecast.length} Hari ke Depan (Tanggal Real-Time)
+              </h3>
+              <span className="text-[11px] text-[#647067]">Zona Waktu: Asia/Jakarta</span>
+            </div>
+            <div
+              className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"
+              data-testid="weather-forecast-grid"
+            >
               {weather.forecast.map((day, idx) => (
                 <div
                   key={idx}
-                  className="rounded-xl bg-[#F7FAF7] p-2.5 text-center border border-slate-200/80"
+                  className={`rounded-xl p-2.5 text-center border ${
+                    idx === 0
+                      ? 'bg-[#F0FDF4] border-[#15803D]/40'
+                      : 'bg-[#F7FAF7] border-slate-200/80'
+                  }`}
                 >
-                  <span className="text-xs font-bold text-[#17231B] block">{day.dayName}</span>
+                  <span className="text-[11px] font-extrabold text-[#17231B] block leading-tight">
+                    {day.formattedDate || day.dayName}
+                  </span>
+                  <span className="text-[10px] text-[#15803D] font-semibold block">
+                    {idx === 0 ? 'Hari Ini' : idx === 1 ? 'Besok' : day.condition}
+                  </span>
                   <div className="my-2 flex justify-center">
                     {day.condition.includes('Hujan') ? (
                       <CloudRain className="h-5 w-5 text-sky-600" />
@@ -405,15 +787,15 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                   <span className="text-[11px] font-bold text-[#17231B] tabular-nums block">
                     {day.tempMinC}° / {day.tempMaxC}°
                   </span>
-                  <span className="text-[10px] text-[#647067] tabular-nums block mt-0.5">
-                    {day.rainChancePct}% hujan
+                  <span className="text-[10px] text-sky-800 font-semibold tabular-nums block mt-0.5">
+                    {day.rainChancePct}% · {day.rainfallMm}mm
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Kondisi Tanah (Lahan 1) matching Screen 9: pH 6.5 Normal · Kelembapan 62% Cukup · Suhu Tanah 23°C Normal */}
+          {/* Kondisi Tanah (Lahan Aktif) */}
           {activePlot && (
             <div className="space-y-3 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
@@ -451,13 +833,12 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                 </div>
               </div>
 
-              {/* Rekomendasi Box matching Screen 9 bottom */}
               <div className="rounded-xl bg-[#DCFCE7]/50 border border-[#15803D]/20 p-3.5">
                 <h4 className="text-xs font-bold text-[#14532D]">Rekomendasi Kondisi Lahan</h4>
                 <p className="text-xs text-[#17231B] mt-0.5">{soilEval.recommendation}</p>
               </div>
 
-              {/* Manual Soil Input Form (Section 10: Pencatatan manual pH, kelembapan, suhu tanah) */}
+              {/* Manual Soil Input Form */}
               <form
                 onSubmit={handleSaveSoilManual}
                 className="rounded-xl bg-[#F7FAF7] p-3.5 border border-slate-200 space-y-2.5"
@@ -511,7 +892,9 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                     onChange={(e) => setSourceInput(e.target.value as SoilObservation['sourceType'])}
                     className="h-9 px-2.5 rounded-lg border border-slate-200 bg-white text-xs text-[#17231B]"
                   >
-                    <option value="Alat Ukur Tanah / pH Meter">Sumber: Alat Ukur Tanah / pH Meter</option>
+                    <option value="Alat Ukur Tanah / pH Meter">
+                      Sumber: Alat Ukur Tanah / pH Meter
+                    </option>
                     <option value="Input Manual Petani">Sumber: Pengamatan Manual Petani</option>
                     <option value="Sensor IoT Lahan">Sumber: Sensor IoT Lahan</option>
                   </select>
@@ -554,7 +937,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
 
             <form onSubmit={handleCreateTask} className="mt-4 space-y-3">
               <div>
-                <label htmlFor="task-title" className="block text-xs font-semibold text-[#17231B] mb-1">
+                <label
+                  htmlFor="task-title"
+                  className="block text-xs font-semibold text-[#17231B] mb-1"
+                >
                   Nama Kegiatan *
                 </label>
                 <input
@@ -567,7 +953,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                 />
               </div>
               <div>
-                <label htmlFor="task-cat" className="block text-xs font-semibold text-[#17231B] mb-1">
+                <label
+                  htmlFor="task-cat"
+                  className="block text-xs font-semibold text-[#17231B] mb-1"
+                >
                   Kategori
                 </label>
                 <select
@@ -586,7 +975,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label htmlFor="task-date" className="block text-xs font-semibold text-[#17231B] mb-1">
+                  <label
+                    htmlFor="task-date"
+                    className="block text-xs font-semibold text-[#17231B] mb-1"
+                  >
                     Tanggal
                   </label>
                   <input
@@ -598,7 +990,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label htmlFor="task-time" className="block text-xs font-semibold text-[#17231B] mb-1">
+                  <label
+                    htmlFor="task-time"
+                    className="block text-xs font-semibold text-[#17231B] mb-1"
+                  >
                     Waktu
                   </label>
                   <input
@@ -611,7 +1006,10 @@ export const CalendarAndWeatherView: React.FC<CalendarAndWeatherViewProps> = ({
                 </div>
               </div>
               <div>
-                <label htmlFor="task-note" className="block text-xs font-semibold text-[#17231B] mb-1">
+                <label
+                  htmlFor="task-note"
+                  className="block text-xs font-semibold text-[#17231B] mb-1"
+                >
                   Catatan / Dosis
                 </label>
                 <input

@@ -1,6 +1,6 @@
 {
   "name": "TaniCerdas AI",
   "description": "Platform pertanian cerdas Indonesia berbasis AI, kamera diagnosis penyakit tanaman, perencanaan budidaya padi 8 fase, kalender tanam, dan manajemen lahan.",
-  "requestFramePermissions": ["camera"],
+  "requestFramePermissions": ["camera", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

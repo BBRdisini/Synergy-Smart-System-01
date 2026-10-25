@@ -28,6 +28,7 @@ import {
   CropProfile,
   CultivationTaskEntity,
   DiagnosisResult,
+  EpidemiologyOptAlert,
   ExpenseRecord,
   FarmEntity,
   FarmPlot,
@@ -62,6 +63,7 @@ import { GuideAndCatalogView } from './components/GuideAndCatalogView';
 import { RecordsAndCalculatorView } from './components/RecordsAndCalculatorView';
 import { ProfileAndOfflineView } from './components/ProfileAndOfflineView';
 import { DashboardAnalyticsAndProfiles } from './components/DashboardAnalyticsAndProfiles';
+import { DashboardGeminiAgriChat } from './components/DashboardGeminiAgriChat';
 import { RiceCultivationLifecycleView } from './components/RiceCultivationLifecycleView';
 import { NotchedMobileNavbar } from './components/NotchedMobileNavbar';
 import {
@@ -69,6 +71,10 @@ import {
   syncPersistentState,
   SyncStatus,
 } from './services/databaseService';
+import {
+  DEFAULT_LARIKREJO_COORDS,
+  fetchLiveMultiSourceWeather,
+} from './services/liveWeatherService';
 import { addDaysToIsoDate, formatIndonesianDate } from './utils/agronomyCalculations';
 
 type MainTab =
@@ -236,15 +242,26 @@ export default function App() {
     );
   };
 
-  const fetchLiveWeather = async () => {
+  const fetchLiveWeather = async (options?: {
+    forceGps?: boolean;
+    customCoords?: {
+      latitude: number;
+      longitude: number;
+      locationName?: string;
+      bmkgAdm4Code?: string;
+      source?: WeatherSnapshot['locationSource'];
+    };
+    providerMode?: 'open-meteo' | 'bmkg-hybrid';
+  }) => {
     if (isOfflineSimulated) return;
     setIsLoadingWeather(true);
     try {
-      const res = await fetch('/api/weather?lat=-6.899&lon=110.802&location=Kudus,%20Jawa%20Tengah');
-      const data = await res.json();
-      if (data && !data.errorFallback && typeof data.tempC === 'number') {
-        setWeather(data);
-      }
+      const snapshot = await fetchLiveMultiSourceWeather({
+        useBrowserGps: options?.forceGps ?? !options?.customCoords,
+        customCoords: options?.customCoords,
+        providerMode: options?.providerMode || weather.providerMode || 'bmkg-hybrid',
+      });
+      setWeather(snapshot);
     } catch (_e) {
       // Retain cached weather snapshot
     } finally {
@@ -252,9 +269,81 @@ export default function App() {
     }
   };
 
+  // Initial live weather fetch + 10-minute auto-refresh interval
   useEffect(() => {
-    fetchLiveWeather();
+    fetchLiveWeather({ forceGps: true });
+    const intervalId = window.setInterval(() => {
+      fetchLiveWeather();
+    }, 10 * 60 * 1000);
+    return () => window.clearInterval(intervalId);
   }, []);
+
+  const handleUpdateUserProfile = (updatedProfile: UserProfile) => {
+    setUser(updatedProfile);
+    if (
+      typeof updatedProfile.latitude === 'number' &&
+      typeof updatedProfile.longitude === 'number'
+    ) {
+      fetchLiveWeather({
+        customCoords: {
+          latitude: updatedProfile.latitude,
+          longitude: updatedProfile.longitude,
+          locationName: `${updatedProfile.village}${
+            updatedProfile.provinceName ? `, ${updatedProfile.provinceName}` : ''
+          }`,
+          bmkgAdm4Code: DEFAULT_LARIKREJO_COORDS.bmkgAdm4Code,
+        },
+      });
+    }
+  };
+
+  const handleAddOptSprayToAgenda = (optAlert: EpidemiologyOptAlert) => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const tomorrowIso = addDaysToIsoDate(todayIso, 1);
+    const targetPlot = plots.find((p) => p.id === selectedPlotId) || plots[0];
+    const resolvedCommodity: CommodityType =
+      optAlert.targetCommodity === 'Padi & Palawija'
+        ? user.mainCommodity || targetPlot?.commodity || 'Padi'
+        : optAlert.targetCommodity;
+
+    const newTask: ScheduledTask = {
+      id: `task-opt-spray-${Date.now()}`,
+      plotId: targetPlot?.id || 'lahan-1',
+      plotName: targetPlot?.name || 'Lahan 1',
+      commodity: resolvedCommodity,
+      title: optAlert.recommendedAgendaTaskTitle,
+      category: 'Penyemprotan Tervalidasi',
+      dateLabel: `${formatIndonesianDate(tomorrowIso)}, 06:30 – 09:00`,
+      isoDate: tomorrowIso,
+      timeSlot: '06:30 – 09:00',
+      completed: false,
+      dosageOrNote: optAlert.recommendedAgendaDosageNote,
+      phaseNumber: 5,
+    };
+    setTasks((prev) => [newTask, ...prev]);
+
+    const activeSeason = growingSeasons.find((s) => s.status === 'Aktif') || growingSeasons[0];
+    if (activeSeason) {
+      const newCultTask: CultivationTaskEntity = {
+        id: `ctask-opt-${Date.now()}`,
+        ownerId: user.id,
+        seasonId: activeSeason.id,
+        farmId: activeSeason.farmId,
+        stageOrder: 6,
+        category: 'Pengendalian Hama & Penyakit',
+        title: optAlert.recommendedAgendaTaskTitle,
+        scheduledDate: tomorrowIso,
+        status: 'Terjadwal',
+        priority: optAlert.riskLevel === 'Tinggi / Siaga' ? 'Tinggi' : 'Sedang',
+        notes: optAlert.recommendedAgendaDosageNote,
+        recommendationSource: 'Sistem Peringatan Dini Epidemiologi OPT Real-Time',
+        createdAt: new Date().toISOString(),
+      };
+      persistAndSyncEntities({
+        cultivationTasks: [newCultTask, ...cultivationTasks],
+      });
+    }
+  };
 
   // Handlers
   const handleAddPlot = (newPlot: FarmPlot, generatedTasks: ScheduledTask[]) => {
@@ -683,9 +772,17 @@ export default function App() {
           <div className="space-y-5">
             {/* Farmer Profile Block (Screen 13) */}
             <div className="flex items-center gap-3 pb-4 border-b border-white/15">
-              <div className="h-11 w-11 rounded-full bg-[#DCFCE7] text-[#14532D] font-bold flex items-center justify-center shrink-0">
-                {userInitials}
-              </div>
+              {user.avatarDataUrl ? (
+                <img
+                  src={user.avatarDataUrl}
+                  alt={user.name}
+                  className="h-11 w-11 rounded-full object-cover border border-[#DCFCE7] shrink-0"
+                />
+              ) : (
+                <div className="h-11 w-11 rounded-full bg-[#DCFCE7] text-[#14532D] font-bold flex items-center justify-center shrink-0">
+                  {userInitials}
+                </div>
+              )}
               <div className="min-w-0">
                 <div className="text-sm font-bold text-white truncate">{user.name}</div>
                 <div className="text-xs text-[#DCFCE7]/85 truncate">{user.role}</div>
@@ -755,15 +852,27 @@ export default function App() {
               {/* Top Greeting & Status Strip */}
               <div className="rounded-2xl bg-white p-5 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="h-12 w-12 rounded-full bg-[#DCFCE7] border-2 border-[#15803D] text-[#14532D] font-bold flex items-center justify-center text-base shrink-0">
-                    {userInitials}
-                  </div>
+                  {user.avatarDataUrl ? (
+                    <img
+                      src={user.avatarDataUrl}
+                      alt={user.name}
+                      className="h-12 w-12 rounded-full object-cover border-2 border-[#15803D] shrink-0"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-[#DCFCE7] border-2 border-[#15803D] text-[#14532D] font-bold flex items-center justify-center text-base shrink-0">
+                      {userInitials}
+                    </div>
+                  )}
                   <div>
-                    <h1 className="text-lg sm:text-xl font-bold text-[#17231B]">
+                    <h1
+                      className="text-lg sm:text-xl font-bold text-[#17231B]"
+                      data-testid="beranda-greeting-name"
+                    >
                       Halo, {user.name}
                     </h1>
                     <p className="text-xs text-[#647067] mt-0.5 tabular-nums">
-                      {user.role} · {user.village} ·{' '}
+                      {user.role} · {user.village}
+                      {user.poktanName ? ` · ${user.poktanName}` : ''} ·{' '}
                       <span className="font-semibold text-[#15803D]">{dbSyncStatus}</span>
                       {' · '}
                       <span>
@@ -807,22 +916,31 @@ export default function App() {
 
               {/* Hero Row: Weather Card + Active Crop Hero Card (Screen 3) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-                {/* Weather Summary Card matching Screen 3 */}
-                <div className="lg:col-span-5 rounded-2xl bg-white p-5 border border-slate-200 flex flex-col justify-between">
+                {/* Weather Summary Card matching Screen 3 — Synchronized with Live Open-Meteo & BMKG */}
+                <div
+                  className="lg:col-span-5 rounded-2xl bg-white p-5 border border-slate-200 flex flex-col justify-between"
+                  data-testid="beranda-live-weather-card"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3.5">
                       <div className="h-14 w-14 rounded-2xl bg-amber-100/80 text-amber-500 flex items-center justify-center shrink-0">
                         <CloudSun className="h-9 w-9" />
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-[#17231B] tabular-nums">
-                          {weather.tempC}°C
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold text-[#17231B] tabular-nums">
+                            {weather.tempC}°C
+                          </span>
+                          <span className="text-[11px] font-semibold text-[#647067] tabular-nums">
+                            Terasa {weather.apparentTempC ?? weather.tempC}°C
+                          </span>
                         </div>
                         <div className="text-xs font-semibold text-[#17231B]">
                           {weather.conditionText}
                         </div>
-                        <div className="text-xs text-[#647067] mt-0.5">
-                          Kudus, Jawa Tengah
+                        <div className="text-xs text-[#647067] mt-0.5 flex items-center gap-1">
+                          <MapPin className="h-3 w-3 text-[#15803D] shrink-0" />
+                          <span>{weather.locationName}</span>
                         </div>
                       </div>
                     </div>
@@ -833,9 +951,88 @@ export default function App() {
                         {weather.humidityPct}%
                       </strong>
                       <span className="text-[11px] text-[#647067] block tabular-nums mt-0.5">
-                        Angin {weather.windSpeedKmh} km/j
+                        Hujan {weather.rainProbabilityPct}% ({weather.rainfallMm}mm) · Angin{' '}
+                        {weather.windSpeedKmh} km/j
                       </span>
                     </div>
+                  </div>
+
+                  {/* GPS Accuracy Verification / Mandatory Device Location Notice on Beranda */}
+                  {weather.locationSource === 'GPS Browser Akurat' ? (
+                    <div className="mt-3 rounded-xl bg-[#F0FDF4] border border-[#15803D]/25 px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <span className="font-semibold text-[#14532D] flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#15803D] shrink-0" />
+                        <span>
+                          GPS Perangkat Aktif & Akurat
+                          {weather.gpsAccuracyMeters ? ` (±${weather.gpsAccuracyMeters}m)` : ''}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => fetchLiveWeather({ forceGps: true })}
+                        className="font-bold text-[#15803D] hover:underline cursor-pointer"
+                      >
+                        Kalibrasi GPS
+                      </button>
+                    </div>
+                  ) : weather.locationSource === 'Lokasi Terpilih Presisi' ? (
+                    <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <span className="font-semibold text-[#14532D] flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-[#15803D] shrink-0" />
+                        <span>
+                          Titik Lokasi Lahan Terkunci ({weather.latitude?.toFixed(3)}, {weather.longitude?.toFixed(3)})
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => fetchLiveWeather({ forceGps: true })}
+                        className="font-bold text-[#15803D] hover:underline cursor-pointer"
+                      >
+                        Aktifkan GPS
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-3 rounded-xl bg-amber-50 border border-amber-300 px-3 py-2.5 space-y-1.5 text-[11px]">
+                      <div className="flex items-start gap-1.5 text-amber-950 font-bold">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <span>Wajib Aktifkan Lokasi (GPS) Perangkat untuk Akurasi Cuaca</span>
+                      </div>
+                      <p className="text-[11px] text-amber-900 leading-snug">
+                        Aktifkan izin Lokasi/GPS di perangkat Anda agar deteksi cuaca tepat di titik lahan.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => fetchLiveWeather({ forceGps: true })}
+                          className="px-2.5 py-1 rounded-lg bg-[#15803D] hover:bg-[#14532D] text-white font-bold cursor-pointer"
+                        >
+                          📍 Aktifkan GPS Sekarang
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('agenda')}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-950 hover:bg-amber-100 font-semibold cursor-pointer"
+                        >
+                          Cari / Pilih Lokasi Desa
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Spraying & Fertilizing Recommendation Badge on Beranda */}
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded-md ${
+                        weather.sprayingAdvisory.status.toLowerCase().includes('tunda')
+                          ? 'bg-amber-100 text-amber-950'
+                          : 'bg-[#DCFCE7] text-[#14532D]'
+                      }`}
+                    >
+                      {weather.sprayingAdvisory.status}
+                    </span>
+                    <span className="text-[#647067] tabular-nums">
+                      Diperbarui: {weather.updatedAt}
+                    </span>
                   </div>
 
                   {/* Soil Condition Mini Row (Screen 9 integration) */}
@@ -981,6 +1178,14 @@ export default function App() {
                 </button>
               </div>
 
+              {/* EMBEDDED GEMINI (3.8 FLASH • ARGON) AGRICULTURAL ASSISTANT ON DASHBOARD */}
+              <DashboardGeminiAgriChat
+                user={user}
+                primaryPlot={primaryPlot}
+                weather={weather}
+                latestDiagnosis={diagnosisHistory[0] || null}
+              />
+
               {/* NEW: PERINGATAN DINI AI, VISUALISASI DATA INTERAKTIF (GARIS, BATANG, HEATMAP) & PROFIL TANAMAN */}
               <DashboardAnalyticsAndProfiles
                 ownerId={user.id}
@@ -993,9 +1198,12 @@ export default function App() {
                 latestDiagnosis={diagnosisHistory[0] || null}
                 diagnosisHistory={diagnosisHistory}
                 isNewPriorityDiagnosis={hasNewPriorityDiagnosis}
+                plantingSeasonMT={user.plantingSeasonMT}
+                mainCommodity={user.mainCommodity}
                 onSaveCropProfile={handleSaveCropProfile}
                 onDeleteCropProfile={handleDeleteCropProfile}
                 onScheduleAlertAction={handleScheduleAlertAction}
+                onAddOptSprayToAgenda={handleAddOptSprayToAgenda}
                 onOpenCameraDiagnosis={() => setActiveTab('kamera')}
               />
 
@@ -1198,6 +1406,9 @@ export default function App() {
                 setSelectedPlotId(pId);
                 setActiveTab('agenda');
               }}
+              weather={weather}
+              isLoadingWeather={isLoadingWeather}
+              onRefreshWeather={() => fetchLiveWeather()}
             />
           )}
 
@@ -1263,7 +1474,9 @@ export default function App() {
           {activeTab === 'profil' && (
             <ProfileAndOfflineView
               user={user}
+              onUpdateUser={handleUpdateUserProfile}
               plots={plots}
+              weather={weather}
               isOfflineSimulated={isOfflineSimulated}
               onToggleOfflineSimulated={() => setIsOfflineSimulated(!isOfflineSimulated)}
               lastSyncedAt={`${lastSyncedAt} (${dbSyncStatus})`}
@@ -1272,7 +1485,62 @@ export default function App() {
               }}
               onOpenAuthModal={() => setAuthModalMode('login')}
               onResetDemoData={handleResetDemoData}
+              onAddSprayAlertToAgenda={handleAddOptSprayToAgenda}
+              onOpenCameraDiagnosis={() => setActiveTab('kamera')}
             />
+          )}
+
+          {/* CREATOR SIGNATURE BANNER: HANYA TAMPIL DI MENU DASHBOARD (BERANDA) ATAU PROFIL SAJA */}
+          {(activeTab === 'beranda' || activeTab === 'profil') && (
+            <footer
+              aria-label="Kredit Pembuat Aplikasi SYNERGY Smart System"
+              className="mt-8 rounded-2xl bg-gradient-to-r from-[#14532D] to-[#0F766E] text-white p-5 border border-emerald-400/20 shadow-xs"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/15 text-[#DCFCE7] text-[11px] font-semibold tracking-wide">
+                    <span>Inovasi Teknologi Pertanian Digital Indonesia</span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold tracking-tight text-white">
+                    Dirancang & Dikembangkan oleh{' '}
+                    <span className="text-[#BBF7D0] font-extrabold">
+                      SYNERGY Smart System
+                    </span>
+                  </h2>
+                  <p className="text-xs text-[#DCFCE7]/90 leading-relaxed">
+                    Menghadirkan ekosistem <em>Smart Farming</em> terpadu berbasis kecerdasan buatan <strong>Gemini AI 3.8 Flash</strong>, deteksi organ tanaman presisi, rekomendasi PHT multi-merk dagang, serta telemetri cuaca pertanian real-time untuk petani Indonesia.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 lg:w-64">
+                  <div className="rounded-xl bg-white/10 border border-white/15 px-3 py-2">
+                    <div className="text-[10px] font-semibold text-[#BBF7D0] uppercase tracking-wide">
+                      Arsitektur & Rekayasa Sistem
+                    </div>
+                    <div className="text-xs font-bold text-white mt-0.5">
+                      SYNERGY Smart System
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white/10 border border-white/15 px-3 py-2">
+                    <div className="text-[10px] font-semibold text-[#DCFCE7]/80 uppercase tracking-wide">
+                      Fokus Teknologi
+                    </div>
+                    <div className="text-xs font-medium text-white mt-0.5">
+                      Precision Agro-AI & Live Telemetry
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3.5 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#DCFCE7]/80">
+                <span>
+                  © {new Date().getFullYear()} <strong>SYNERGY Smart System</strong> — Ekosistem TaniCerdas AI.
+                </span>
+                <span className="font-medium text-[#BBF7D0]">
+                  Petani Cerdas, Lahan Berkualitas, Panen Melimpah
+                </span>
+              </div>
+            </footer>
           )}
         </main>
       </div>
