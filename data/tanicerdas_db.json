@@ -1,0 +1,1679 @@
+{
+  "version": "1.0.0-tahap1-persistent",
+  "updatedAt": "2026-10-24T13:31:35.510Z",
+  "users": [
+    {
+      "id": "usr-budi-santoso",
+      "name": "Budi Santoso",
+      "role": "Petani Padi",
+      "village": "Desa Larikrejo, Undaan, Kudus",
+      "emailOrPhone": "budi@email.com",
+      "isLoggedIn": true,
+      "privacyConsentAccepted": true,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "preferences": {
+        "defaultAreaUnit": "ha",
+        "enableOfflineQueue": true,
+        "notificationsEnabled": true
+      }
+    }
+  ],
+  "farms": [
+    {
+      "id": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "name": "Lahan 1 — Blok Sawah Utama",
+      "location": "Desa Larikrejo, Kec. Undaan, Kab. Kudus",
+      "areaValue": 1.2,
+      "areaUnit": "ha",
+      "areaHaNormalized": 1.2,
+      "soilType": "Aluvial Sawah",
+      "waterSource": "Irigasi Teknis",
+      "notes": "Dekat saluran sekunder Undaan. Tanah subur pH 6,5.",
+      "isArchived": false,
+      "createdAt": "2025-01-10T08:00:00Z",
+      "updatedAt": "2025-05-01T08:00:00Z"
+    },
+    {
+      "id": "lahan-2",
+      "ownerId": "usr-budi-santoso",
+      "name": "Lahan 2 — Blok Timur Irigasi",
+      "location": "Desa Larikrejo, Kec. Undaan, Kab. Kudus",
+      "areaValue": 8000,
+      "areaUnit": "m2",
+      "areaHaNormalized": 0.8,
+      "soilType": "Aluvial Lempung Berliat",
+      "waterSource": "Irigasi Teknis",
+      "notes": "Cocok untuk varietas tahan HDB/Kresek pada musim penghujan.",
+      "isArchived": false,
+      "createdAt": "2025-01-15T08:00:00Z",
+      "updatedAt": "2025-04-28T08:00:00Z"
+    }
+  ],
+  "growingSeasons": [
+    {
+      "id": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan 1 — Blok Sawah Utama",
+      "ownerId": "usr-budi-santoso",
+      "commodity": "Padi",
+      "variety": "Ciherang",
+      "plantedAreaHa": 1.2,
+      "startDate": "2025-03-22",
+      "seedingDate": "2025-03-26",
+      "plantingDate": "2025-04-12",
+      "cultivationSystem": "Pindah Tanam (Jajar Legowo 2:1)",
+      "currentStageOrder": 6,
+      "currentStageName": "6. Pertumbuhan Vegetatif",
+      "currentHst": 20,
+      "targetYieldKg": 8160,
+      "status": "Aktif",
+      "estimatedHarvestDate": "2025-07-16",
+      "harvestWindowEnd": "2025-07-21",
+      "initialSoilCondition": "Lumpur aluvial rata, pH 6,5, air irigasi teknis lancar",
+      "previousCropHistory": "Padi Musim Tanam I (Panen Februari 2025 — 6,8 Ton/Ha)",
+      "notes": "Musim Tanam II Padi Ciherang dengan sistem Jajar Legowo 2:1.",
+      "stages": [
+        {
+          "stageNumber": 1,
+          "order": 1,
+          "id": "season-padi-1-stage-1",
+          "name": "1. Persiapan Lahan",
+          "description": "Sanitasi tunggul jerami, pembajakan tanah I & II, perataan lumpur, dan perbaikan pematang/saluran air.",
+          "objective": "Sanitasi tunggul jerami, pembajakan tanah I & II, perataan lumpur, dan perbaikan pematang/saluran air.",
+          "recommendedActions": [
+            "Bajak tanah kedalaman 15–20 cm",
+            "Benamkan bahan organik/kompos matang ±2 ton/Ha",
+            "Ratakan lumpur petakan sawah"
+          ],
+          "successIndicators": [
+            "Bajak tanah kedalaman 15–20 cm",
+            "Benamkan bahan organik/kompos matang ±2 ton/Ha",
+            "Ratakan lumpur petakan sawah"
+          ],
+          "commonRisks": [
+            "Estimasi waktu persiapan untuk luas 1.2 Ha."
+          ],
+          "estimatedDayStart": -21,
+          "estimatedDayEnd": -15,
+          "hstStart": -21,
+          "hstEnd": -15,
+          "estimatedDateStart": "2025-03-22",
+          "estimatedDateEnd": "2025-03-28",
+          "estimatedStartDate": "2025-03-22",
+          "estimatedEndDate": "2025-03-28",
+          "status": "Selesai",
+          "notes": "Estimasi waktu persiapan untuk luas 1.2 Ha.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 2,
+          "order": 2,
+          "id": "season-padi-1-stage-2",
+          "name": "2. Persiapan Benih",
+          "description": "Seleksi benih bernas dengan larutan air garam, pencucian, perendaman 24 jam, dan pemeraman 48 jam.",
+          "objective": "Seleksi benih bernas dengan larutan air garam, pencucian, perendaman 24 jam, dan pemeraman 48 jam.",
+          "recommendedActions": [
+            "Siapkan ±30 kg benih berlabel resmi",
+            "Seleksi benih hampa dan rendam 24 jam"
+          ],
+          "successIndicators": [
+            "Siapkan ±30 kg benih berlabel resmi",
+            "Seleksi benih hampa dan rendam 24 jam"
+          ],
+          "commonRisks": [
+            "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha)."
+          ],
+          "estimatedDayStart": -19,
+          "estimatedDayEnd": -17,
+          "hstStart": -19,
+          "hstEnd": -17,
+          "estimatedDateStart": "2025-03-24",
+          "estimatedDateEnd": "2025-03-26",
+          "estimatedStartDate": "2025-03-24",
+          "estimatedEndDate": "2025-03-26",
+          "status": "Selesai",
+          "notes": "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha).",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 3,
+          "order": 3,
+          "id": "season-padi-1-stage-3",
+          "name": "3. Persemaian",
+          "description": "Penaburan benih pada bedengan persemaian (4% luas tanam) selama ±18 hari.",
+          "objective": "Penaburan benih pada bedengan persemaian (4% luas tanam) selama ±18 hari.",
+          "recommendedActions": [
+            "Jaga kelembapan media semai",
+            "Pantau bibit dari kelompok telur penggerek batang"
+          ],
+          "successIndicators": [
+            "Jaga kelembapan media semai",
+            "Pantau bibit dari kelompok telur penggerek batang"
+          ],
+          "commonRisks": [
+            "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal."
+          ],
+          "estimatedDayStart": -18,
+          "estimatedDayEnd": -1,
+          "hstStart": -18,
+          "hstEnd": -1,
+          "estimatedDateStart": "2025-03-25",
+          "estimatedDateEnd": "2025-04-11",
+          "estimatedStartDate": "2025-03-25",
+          "estimatedEndDate": "2025-04-11",
+          "status": "Selesai",
+          "notes": "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 4,
+          "order": 4,
+          "id": "season-padi-1-stage-4",
+          "name": "4. Penanaman atau Pindah Tanam",
+          "description": "Penanaman bibit pada kondisi lahan macak-macak menggunakan sistem Pindah Tanam (Jajar Legowo 2:1).",
+          "objective": "Penanaman bibit pada kondisi lahan macak-macak menggunakan sistem Pindah Tanam (Jajar Legowo 2:1).",
+          "recommendedActions": [
+            "Tanam 2–3 batang bibit muda per rumpun",
+            "Jangan memotong ujung daun bibit untuk mencegah infeksi bakteri Kresek"
+          ],
+          "successIndicators": [
+            "Tanam 2–3 batang bibit muda per rumpun",
+            "Jangan memotong ujung daun bibit untuk mencegah infeksi bakteri Kresek"
+          ],
+          "commonRisks": [
+            "Tanggal 0 HST menjadi titik acuan kalender musim tanam."
+          ],
+          "estimatedDayStart": 0,
+          "estimatedDayEnd": 1,
+          "hstStart": 0,
+          "hstEnd": 1,
+          "estimatedDateStart": "2025-04-12",
+          "estimatedDateEnd": "2025-04-13",
+          "estimatedStartDate": "2025-04-12",
+          "estimatedEndDate": "2025-04-13",
+          "status": "Selesai",
+          "notes": "Tanggal 0 HST menjadi titik acuan kalender musim tanam.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 5,
+          "order": 5,
+          "id": "season-padi-1-stage-5",
+          "name": "5. Adaptasi Awal Tanaman",
+          "description": "Fase pemulihan perakaran bibit (ngelilir) dan penyulaman rumpun yang mati atau kosong.",
+          "objective": "Fase pemulihan perakaran bibit (ngelilir) dan penyulaman rumpun yang mati atau kosong.",
+          "recommendedActions": [
+            "Pertahankan air macak-macak 1–2 cm",
+            "Sulam rumpun kosong dengan bibit cadangan umur sama"
+          ],
+          "successIndicators": [
+            "Pertahankan air macak-macak 1–2 cm",
+            "Sulam rumpun kosong dengan bibit cadangan umur sama"
+          ],
+          "commonRisks": [
+            "Penyulaman wajib selesai sebelum pemupukan pertama."
+          ],
+          "estimatedDayStart": 2,
+          "estimatedDayEnd": 7,
+          "hstStart": 2,
+          "hstEnd": 7,
+          "estimatedDateStart": "2025-04-14",
+          "estimatedDateEnd": "2025-04-19",
+          "estimatedStartDate": "2025-04-14",
+          "estimatedEndDate": "2025-04-19",
+          "status": "Selesai",
+          "notes": "Penyulaman wajib selesai sebelum pemupukan pertama.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 6,
+          "order": 6,
+          "id": "season-padi-1-stage-6",
+          "name": "6. Pertumbuhan Vegetatif",
+          "description": "Pembentukan anakan aktif dan peningkatan jumlah daun.",
+          "objective": "Pembentukan anakan aktif dan peningkatan jumlah daun.",
+          "recommendedActions": [
+            "Hitung jumlah anakan per rumpun",
+            "Ukur tingkat kehijauan daun dengan BWD setiap 7–10 hari"
+          ],
+          "successIndicators": [
+            "Hitung jumlah anakan per rumpun",
+            "Ukur tingkat kehijauan daun dengan BWD setiap 7–10 hari"
+          ],
+          "commonRisks": [
+            "Fase vegetatif menentukan jumlah malai produktif per rumpun."
+          ],
+          "estimatedDayStart": 8,
+          "estimatedDayEnd": 35,
+          "hstStart": 8,
+          "hstEnd": 35,
+          "estimatedDateStart": "2025-04-20",
+          "estimatedDateEnd": "2025-05-17",
+          "estimatedStartDate": "2025-04-20",
+          "estimatedEndDate": "2025-05-17",
+          "status": "Sedang Berjalan",
+          "notes": "Fase vegetatif menentukan jumlah malai produktif per rumpun.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 7,
+          "order": 7,
+          "id": "season-padi-1-stage-7",
+          "name": "7. Pemupukan Sesuai Rekomendasi",
+          "description": "Aplikasi pupuk berimbang bertahap (7–10 HST, 20–25 HST, dan 35–40 HST) disesuaikan kondisi tanah dan BWD.",
+          "objective": "Aplikasi pupuk berimbang bertahap (7–10 HST, 20–25 HST, dan 35–40 HST) disesuaikan kondisi tanah dan BWD.",
+          "recommendedActions": [
+            "Tahap I (7–10 HST): Urea ±84 kg + NPK ±180 kg",
+            "Tahap II (20–25 HST): Urea ±156 kg disesuaikan skor BWD",
+            "Tahap III (35–40 HST): NPK ±180 kg menjelang primordia"
+          ],
+          "successIndicators": [
+            "Tahap I (7–10 HST): Urea ±84 kg + NPK ±180 kg",
+            "Tahap II (20–25 HST): Urea ±156 kg disesuaikan skor BWD",
+            "Tahap III (35–40 HST): NPK ±180 kg menjelang primordia"
+          ],
+          "commonRisks": [
+            "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat."
+          ],
+          "estimatedDayStart": 7,
+          "estimatedDayEnd": 40,
+          "hstStart": 7,
+          "hstEnd": 40,
+          "estimatedDateStart": "2025-04-19",
+          "estimatedDateEnd": "2025-05-22",
+          "estimatedStartDate": "2025-04-19",
+          "estimatedEndDate": "2025-05-22",
+          "status": "Terjadwal",
+          "notes": "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 8,
+          "order": 8,
+          "id": "season-padi-1-stage-8",
+          "name": "8. Pengairan dan Pemeliharaan",
+          "description": "Pengairan berselang (Alternate Wetting & Drying / AWD) dan penyiangan gulma mekanis.",
+          "objective": "Pengairan berselang (Alternate Wetting & Drying / AWD) dan penyiangan gulma mekanis.",
+          "recommendedActions": [
+            "Siangi gulma sebelum pemupukan susulan",
+            "Airi 3–5 cm lalu biarkan surut alami hingga tanah macak-macak"
+          ],
+          "successIndicators": [
+            "Siangi gulma sebelum pemupukan susulan",
+            "Airi 3–5 cm lalu biarkan surut alami hingga tanah macak-macak"
+          ],
+          "commonRisks": [
+            "Pengairan berselang memperkuat batang dan menekan perkembangan wereng."
+          ],
+          "estimatedDayStart": 12,
+          "estimatedDayEnd": 50,
+          "hstStart": 12,
+          "hstEnd": 50,
+          "estimatedDateStart": "2025-04-24",
+          "estimatedDateEnd": "2025-06-01",
+          "estimatedStartDate": "2025-04-24",
+          "estimatedEndDate": "2025-06-01",
+          "status": "Terjadwal",
+          "notes": "Pengairan berselang memperkuat batang dan menekan perkembangan wereng.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 9,
+          "order": 9,
+          "id": "season-padi-1-stage-9",
+          "name": "9. Pemantauan Gulma, Hama, dan Penyakit",
+          "description": "Pengamatan agroekosistem mingguan secara diagonal. Penyemprotan TIDAK dijadwalkan otomatis tanpa temuan ambang ekonomi.",
+          "objective": "Pengamatan agroekosistem mingguan secara diagonal. Penyemprotan TIDAK dijadwalkan otomatis tanpa temuan ambang ekonomi.",
+          "recommendedActions": [
+            "Amati 20 rumpun diagonal terhadap bercak daun Blas dan populasi wereng pangkal batang",
+            "Catat keberadaan predator alami (laba-laba, kepik mirid)",
+            "Hanya lakukan pengendalian tervalidasi bila populasi melampaui ambang ekonomi"
+          ],
+          "successIndicators": [
+            "Amati 20 rumpun diagonal terhadap bercak daun Blas dan populasi wereng pangkal batang",
+            "Catat keberadaan predator alami (laba-laba, kepik mirid)",
+            "Hanya lakukan pengendalian tervalidasi bila populasi melampaui ambang ekonomi"
+          ],
+          "commonRisks": [
+            "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan."
+          ],
+          "estimatedDayStart": 15,
+          "estimatedDayEnd": 65,
+          "hstStart": 15,
+          "hstEnd": 65,
+          "estimatedDateStart": "2025-04-27",
+          "estimatedDateEnd": "2025-06-16",
+          "estimatedStartDate": "2025-04-27",
+          "estimatedEndDate": "2025-06-16",
+          "status": "Terjadwal",
+          "notes": "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 10,
+          "order": 10,
+          "id": "season-padi-1-stage-10",
+          "name": "10. Pembungaan",
+          "description": "Fase keluar malai (heading) dan penyerbukan bunga padi (anthesis).",
+          "objective": "Fase keluar malai (heading) dan penyerbukan bunga padi (anthesis).",
+          "recommendedActions": [
+            "Jaga genangan air tipis 3–5 cm agar bunga tidak hampa karena cekaman kekeringan",
+            "Pantau hama walang sangit pada pagi/sore hari"
+          ],
+          "successIndicators": [
+            "Jaga genangan air tipis 3–5 cm agar bunga tidak hampa karena cekaman kekeringan",
+            "Pantau hama walang sangit pada pagi/sore hari"
+          ],
+          "commonRisks": [
+            "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk."
+          ],
+          "estimatedDayStart": 60,
+          "estimatedDayEnd": 70,
+          "hstStart": 60,
+          "hstEnd": 70,
+          "estimatedDateStart": "2025-06-11",
+          "estimatedDateEnd": "2025-06-21",
+          "estimatedStartDate": "2025-06-11",
+          "estimatedEndDate": "2025-06-21",
+          "status": "Terjadwal",
+          "notes": "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 11,
+          "order": 11,
+          "id": "season-padi-1-stage-11",
+          "name": "11. Pengisian Gabah",
+          "description": "Fase masak susu hingga masak tepung pada bulir gabah.",
+          "objective": "Fase masak susu hingga masak tepung pada bulir gabah.",
+          "recommendedActions": [
+            "Periksa persentase gabah bernas",
+            "Awasi gejala busuk leher malai (neck blast)"
+          ],
+          "successIndicators": [
+            "Periksa persentase gabah bernas",
+            "Awasi gejala busuk leher malai (neck blast)"
+          ],
+          "commonRisks": [
+            "Pastikan daun bendera tetap sehat dan hijau."
+          ],
+          "estimatedDayStart": 71,
+          "estimatedDayEnd": 83,
+          "hstStart": 71,
+          "hstEnd": 83,
+          "estimatedDateStart": "2025-06-22",
+          "estimatedDateEnd": "2025-07-04",
+          "estimatedStartDate": "2025-06-22",
+          "estimatedEndDate": "2025-07-04",
+          "status": "Terjadwal",
+          "notes": "Pastikan daun bendera tetap sehat dan hijau.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 12,
+          "order": 12,
+          "id": "season-padi-1-stage-12",
+          "name": "12. Pematangan",
+          "description": "Fase masak kuning dan pengeringan lahan bertahap menjelang panen.",
+          "objective": "Fase masak kuning dan pengeringan lahan bertahap menjelang panen.",
+          "recommendedActions": [
+            "Buka saluran pembuangan air agar tanah mengeras",
+            "Amati kematangan bulir hingga 90–95% gabah menguning keras"
+          ],
+          "successIndicators": [
+            "Buka saluran pembuangan air agar tanah mengeras",
+            "Amati kematangan bulir hingga 90–95% gabah menguning keras"
+          ],
+          "commonRisks": [
+            "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen."
+          ],
+          "estimatedDayStart": 84,
+          "estimatedDayEnd": 94,
+          "hstStart": 84,
+          "hstEnd": 94,
+          "estimatedDateStart": "2025-07-05",
+          "estimatedDateEnd": "2025-07-15",
+          "estimatedStartDate": "2025-07-05",
+          "estimatedEndDate": "2025-07-15",
+          "status": "Terjadwal",
+          "notes": "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 13,
+          "order": 13,
+          "id": "season-padi-1-stage-13",
+          "name": "13. Panen",
+          "description": "Pemanenan tepat waktu saat 90–95% bulir malai menguning bernas dan perontokan segera.",
+          "objective": "Pemanenan tepat waktu saat 90–95% bulir malai menguning bernas dan perontokan segera.",
+          "recommendedActions": [
+            "Potong padi dan gunakan alas terpal untuk menekan susut tercecer",
+            "Rontokkan gabah maksimal 24 jam setelah potong"
+          ],
+          "successIndicators": [
+            "Potong padi dan gunakan alas terpal untuk menekan susut tercecer",
+            "Rontokkan gabah maksimal 24 jam setelah potong"
+          ],
+          "commonRisks": [
+            "Estimasi tanggal panen varietas Ciherang: ±95 HST."
+          ],
+          "estimatedDayStart": 95,
+          "estimatedDayEnd": 98,
+          "hstStart": 95,
+          "hstEnd": 98,
+          "estimatedDateStart": "2025-07-16",
+          "estimatedDateEnd": "2025-07-19",
+          "estimatedStartDate": "2025-07-16",
+          "estimatedEndDate": "2025-07-19",
+          "status": "Terjadwal",
+          "notes": "Estimasi tanggal panen varietas Ciherang: ±95 HST.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 14,
+          "order": 14,
+          "id": "season-padi-1-stage-14",
+          "name": "14. Pascapanen dan Evaluasi",
+          "description": "Pengeringan GKP menjadi GKG (kadar air ≤14%), penyimpanan, dan evaluasi laba/rugi musim tanam.",
+          "objective": "Pengeringan GKP menjadi GKG (kadar air ≤14%), penyimpanan, dan evaluasi laba/rugi musim tanam.",
+          "recommendedActions": [
+            "Ukur kadar air gabah",
+            "Rekap seluruh biaya aktual, pendapatan panen, dan laba bersih musim tanam"
+          ],
+          "successIndicators": [
+            "Ukur kadar air gabah",
+            "Rekap seluruh biaya aktual, pendapatan panen, dan laba bersih musim tanam"
+          ],
+          "commonRisks": [
+            "Selesaikan evaluasi sebelum menutup musim tanam."
+          ],
+          "estimatedDayStart": 99,
+          "estimatedDayEnd": 105,
+          "hstStart": 99,
+          "hstEnd": 105,
+          "estimatedDateStart": "2025-07-20",
+          "estimatedDateEnd": "2025-07-26",
+          "estimatedStartDate": "2025-07-20",
+          "estimatedEndDate": "2025-07-26",
+          "status": "Terjadwal",
+          "notes": "Selesaikan evaluasi sebelum menutup musim tanam.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        }
+      ],
+      "createdAt": "2025-03-22T07:00:00Z",
+      "updatedAt": "2025-05-02T07:00:00Z"
+    },
+    {
+      "id": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan 2 — Blok Timur Irigasi",
+      "ownerId": "usr-budi-santoso",
+      "commodity": "Padi",
+      "variety": "Inpari 32 HDB",
+      "plantedAreaHa": 0.8,
+      "startDate": "2025-04-07",
+      "seedingDate": "2025-04-12",
+      "plantingDate": "2025-04-28",
+      "cultivationSystem": "Pindah Tanam (Jajar Legowo 2:1)",
+      "currentStageOrder": 6,
+      "currentStageName": "6. Pertumbuhan Vegetatif",
+      "currentHst": 4,
+      "targetYieldKg": 5760,
+      "status": "Aktif",
+      "estimatedHarvestDate": "2025-07-29",
+      "harvestWindowEnd": "2025-08-03",
+      "initialSoilCondition": "Tanah aluvial macak-macak, pH 6,4, jerami sisa musim lalu sudah dikomposkan",
+      "previousCropHistory": "Padi Inpari 32 (Panen Maret 2025)",
+      "notes": "Fokus pencegahan Kresek dan pemantauan keong mas fase adaptasi awal.",
+      "stages": [
+        {
+          "stageNumber": 1,
+          "order": 1,
+          "id": "season-padi-2-stage-1",
+          "name": "1. Persiapan Lahan",
+          "description": "Sanitasi tunggul jerami, pembajakan tanah I & II, perataan lumpur, dan perbaikan pematang/saluran air.",
+          "objective": "Sanitasi tunggul jerami, pembajakan tanah I & II, perataan lumpur, dan perbaikan pematang/saluran air.",
+          "recommendedActions": [
+            "Bajak tanah kedalaman 15–20 cm",
+            "Benamkan bahan organik/kompos matang ±2 ton/Ha",
+            "Ratakan lumpur petakan sawah"
+          ],
+          "successIndicators": [
+            "Bajak tanah kedalaman 15–20 cm",
+            "Benamkan bahan organik/kompos matang ±2 ton/Ha",
+            "Ratakan lumpur petakan sawah"
+          ],
+          "commonRisks": [
+            "Estimasi waktu persiapan untuk luas 0.8 Ha."
+          ],
+          "estimatedDayStart": -21,
+          "estimatedDayEnd": -15,
+          "hstStart": -21,
+          "hstEnd": -15,
+          "estimatedDateStart": "2025-04-07",
+          "estimatedDateEnd": "2025-04-13",
+          "estimatedStartDate": "2025-04-07",
+          "estimatedEndDate": "2025-04-13",
+          "status": "Selesai",
+          "notes": "Estimasi waktu persiapan untuk luas 0.8 Ha.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 2,
+          "order": 2,
+          "id": "season-padi-2-stage-2",
+          "name": "2. Persiapan Benih",
+          "description": "Seleksi benih bernas dengan larutan air garam, pencucian, perendaman 24 jam, dan pemeraman 48 jam.",
+          "objective": "Seleksi benih bernas dengan larutan air garam, pencucian, perendaman 24 jam, dan pemeraman 48 jam.",
+          "recommendedActions": [
+            "Siapkan ±20 kg benih berlabel resmi",
+            "Seleksi benih hampa dan rendam 24 jam"
+          ],
+          "successIndicators": [
+            "Siapkan ±20 kg benih berlabel resmi",
+            "Seleksi benih hampa dan rendam 24 jam"
+          ],
+          "commonRisks": [
+            "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha)."
+          ],
+          "estimatedDayStart": -19,
+          "estimatedDayEnd": -17,
+          "hstStart": -19,
+          "hstEnd": -17,
+          "estimatedDateStart": "2025-04-09",
+          "estimatedDateEnd": "2025-04-11",
+          "estimatedStartDate": "2025-04-09",
+          "estimatedEndDate": "2025-04-11",
+          "status": "Selesai",
+          "notes": "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha).",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 3,
+          "order": 3,
+          "id": "season-padi-2-stage-3",
+          "name": "3. Persemaian",
+          "description": "Penaburan benih pada bedengan persemaian (4% luas tanam) selama ±18 hari.",
+          "objective": "Penaburan benih pada bedengan persemaian (4% luas tanam) selama ±18 hari.",
+          "recommendedActions": [
+            "Jaga kelembapan media semai",
+            "Pantau bibit dari kelompok telur penggerek batang"
+          ],
+          "successIndicators": [
+            "Jaga kelembapan media semai",
+            "Pantau bibit dari kelompok telur penggerek batang"
+          ],
+          "commonRisks": [
+            "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal."
+          ],
+          "estimatedDayStart": -18,
+          "estimatedDayEnd": -1,
+          "hstStart": -18,
+          "hstEnd": -1,
+          "estimatedDateStart": "2025-04-10",
+          "estimatedDateEnd": "2025-04-27",
+          "estimatedStartDate": "2025-04-10",
+          "estimatedEndDate": "2025-04-27",
+          "status": "Selesai",
+          "notes": "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 4,
+          "order": 4,
+          "id": "season-padi-2-stage-4",
+          "name": "4. Penanaman atau Pindah Tanam",
+          "description": "Penanaman bibit pada kondisi lahan macak-macak menggunakan sistem Pindah Tanam (Jajar Legowo 2:1).",
+          "objective": "Penanaman bibit pada kondisi lahan macak-macak menggunakan sistem Pindah Tanam (Jajar Legowo 2:1).",
+          "recommendedActions": [
+            "Tanam 2–3 batang bibit muda per rumpun",
+            "Jangan memotong ujung daun bibit untuk mencegah infeksi bakteri Kresek"
+          ],
+          "successIndicators": [
+            "Tanam 2–3 batang bibit muda per rumpun",
+            "Jangan memotong ujung daun bibit untuk mencegah infeksi bakteri Kresek"
+          ],
+          "commonRisks": [
+            "Tanggal 0 HST menjadi titik acuan kalender musim tanam."
+          ],
+          "estimatedDayStart": 0,
+          "estimatedDayEnd": 1,
+          "hstStart": 0,
+          "hstEnd": 1,
+          "estimatedDateStart": "2025-04-28",
+          "estimatedDateEnd": "2025-04-29",
+          "estimatedStartDate": "2025-04-28",
+          "estimatedEndDate": "2025-04-29",
+          "status": "Selesai",
+          "notes": "Tanggal 0 HST menjadi titik acuan kalender musim tanam.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 5,
+          "order": 5,
+          "id": "season-padi-2-stage-5",
+          "name": "5. Adaptasi Awal Tanaman",
+          "description": "Fase pemulihan perakaran bibit (ngelilir) dan penyulaman rumpun yang mati atau kosong.",
+          "objective": "Fase pemulihan perakaran bibit (ngelilir) dan penyulaman rumpun yang mati atau kosong.",
+          "recommendedActions": [
+            "Pertahankan air macak-macak 1–2 cm",
+            "Sulam rumpun kosong dengan bibit cadangan umur sama"
+          ],
+          "successIndicators": [
+            "Pertahankan air macak-macak 1–2 cm",
+            "Sulam rumpun kosong dengan bibit cadangan umur sama"
+          ],
+          "commonRisks": [
+            "Penyulaman wajib selesai sebelum pemupukan pertama."
+          ],
+          "estimatedDayStart": 2,
+          "estimatedDayEnd": 7,
+          "hstStart": 2,
+          "hstEnd": 7,
+          "estimatedDateStart": "2025-04-30",
+          "estimatedDateEnd": "2025-05-05",
+          "estimatedStartDate": "2025-04-30",
+          "estimatedEndDate": "2025-05-05",
+          "status": "Selesai",
+          "notes": "Penyulaman wajib selesai sebelum pemupukan pertama.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 6,
+          "order": 6,
+          "id": "season-padi-2-stage-6",
+          "name": "6. Pertumbuhan Vegetatif",
+          "description": "Pembentukan anakan aktif dan peningkatan jumlah daun.",
+          "objective": "Pembentukan anakan aktif dan peningkatan jumlah daun.",
+          "recommendedActions": [
+            "Hitung jumlah anakan per rumpun",
+            "Ukur tingkat kehijauan daun dengan BWD setiap 7–10 hari"
+          ],
+          "successIndicators": [
+            "Hitung jumlah anakan per rumpun",
+            "Ukur tingkat kehijauan daun dengan BWD setiap 7–10 hari"
+          ],
+          "commonRisks": [
+            "Fase vegetatif menentukan jumlah malai produktif per rumpun."
+          ],
+          "estimatedDayStart": 8,
+          "estimatedDayEnd": 35,
+          "hstStart": 8,
+          "hstEnd": 35,
+          "estimatedDateStart": "2025-05-06",
+          "estimatedDateEnd": "2025-06-02",
+          "estimatedStartDate": "2025-05-06",
+          "estimatedEndDate": "2025-06-02",
+          "status": "Sedang Berjalan",
+          "notes": "Fase vegetatif menentukan jumlah malai produktif per rumpun.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 7,
+          "order": 7,
+          "id": "season-padi-2-stage-7",
+          "name": "7. Pemupukan Sesuai Rekomendasi",
+          "description": "Aplikasi pupuk berimbang bertahap (7–10 HST, 20–25 HST, dan 35–40 HST) disesuaikan kondisi tanah dan BWD.",
+          "objective": "Aplikasi pupuk berimbang bertahap (7–10 HST, 20–25 HST, dan 35–40 HST) disesuaikan kondisi tanah dan BWD.",
+          "recommendedActions": [
+            "Tahap I (7–10 HST): Urea ±56 kg + NPK ±120 kg",
+            "Tahap II (20–25 HST): Urea ±104 kg disesuaikan skor BWD",
+            "Tahap III (35–40 HST): NPK ±120 kg menjelang primordia"
+          ],
+          "successIndicators": [
+            "Tahap I (7–10 HST): Urea ±56 kg + NPK ±120 kg",
+            "Tahap II (20–25 HST): Urea ±104 kg disesuaikan skor BWD",
+            "Tahap III (35–40 HST): NPK ±120 kg menjelang primordia"
+          ],
+          "commonRisks": [
+            "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat."
+          ],
+          "estimatedDayStart": 7,
+          "estimatedDayEnd": 40,
+          "hstStart": 7,
+          "hstEnd": 40,
+          "estimatedDateStart": "2025-05-05",
+          "estimatedDateEnd": "2025-06-07",
+          "estimatedStartDate": "2025-05-05",
+          "estimatedEndDate": "2025-06-07",
+          "status": "Terjadwal",
+          "notes": "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 8,
+          "order": 8,
+          "id": "season-padi-2-stage-8",
+          "name": "8. Pengairan dan Pemeliharaan",
+          "description": "Pengairan berselang (Alternate Wetting & Drying / AWD) dan penyiangan gulma mekanis.",
+          "objective": "Pengairan berselang (Alternate Wetting & Drying / AWD) dan penyiangan gulma mekanis.",
+          "recommendedActions": [
+            "Siangi gulma sebelum pemupukan susulan",
+            "Airi 3–5 cm lalu biarkan surut alami hingga tanah macak-macak"
+          ],
+          "successIndicators": [
+            "Siangi gulma sebelum pemupukan susulan",
+            "Airi 3–5 cm lalu biarkan surut alami hingga tanah macak-macak"
+          ],
+          "commonRisks": [
+            "Pengairan berselang memperkuat batang dan menekan perkembangan wereng."
+          ],
+          "estimatedDayStart": 12,
+          "estimatedDayEnd": 50,
+          "hstStart": 12,
+          "hstEnd": 50,
+          "estimatedDateStart": "2025-05-10",
+          "estimatedDateEnd": "2025-06-17",
+          "estimatedStartDate": "2025-05-10",
+          "estimatedEndDate": "2025-06-17",
+          "status": "Terjadwal",
+          "notes": "Pengairan berselang memperkuat batang dan menekan perkembangan wereng.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 9,
+          "order": 9,
+          "id": "season-padi-2-stage-9",
+          "name": "9. Pemantauan Gulma, Hama, dan Penyakit",
+          "description": "Pengamatan agroekosistem mingguan secara diagonal. Penyemprotan TIDAK dijadwalkan otomatis tanpa temuan ambang ekonomi.",
+          "objective": "Pengamatan agroekosistem mingguan secara diagonal. Penyemprotan TIDAK dijadwalkan otomatis tanpa temuan ambang ekonomi.",
+          "recommendedActions": [
+            "Amati 20 rumpun diagonal terhadap bercak daun Blas dan populasi wereng pangkal batang",
+            "Catat keberadaan predator alami (laba-laba, kepik mirid)",
+            "Hanya lakukan pengendalian tervalidasi bila populasi melampaui ambang ekonomi"
+          ],
+          "successIndicators": [
+            "Amati 20 rumpun diagonal terhadap bercak daun Blas dan populasi wereng pangkal batang",
+            "Catat keberadaan predator alami (laba-laba, kepik mirid)",
+            "Hanya lakukan pengendalian tervalidasi bila populasi melampaui ambang ekonomi"
+          ],
+          "commonRisks": [
+            "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan."
+          ],
+          "estimatedDayStart": 15,
+          "estimatedDayEnd": 65,
+          "hstStart": 15,
+          "hstEnd": 65,
+          "estimatedDateStart": "2025-05-13",
+          "estimatedDateEnd": "2025-07-02",
+          "estimatedStartDate": "2025-05-13",
+          "estimatedEndDate": "2025-07-02",
+          "status": "Terjadwal",
+          "notes": "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 10,
+          "order": 10,
+          "id": "season-padi-2-stage-10",
+          "name": "10. Pembungaan",
+          "description": "Fase keluar malai (heading) dan penyerbukan bunga padi (anthesis).",
+          "objective": "Fase keluar malai (heading) dan penyerbukan bunga padi (anthesis).",
+          "recommendedActions": [
+            "Jaga genangan air tipis 3–5 cm agar bunga tidak hampa karena cekaman kekeringan",
+            "Pantau hama walang sangit pada pagi/sore hari"
+          ],
+          "successIndicators": [
+            "Jaga genangan air tipis 3–5 cm agar bunga tidak hampa karena cekaman kekeringan",
+            "Pantau hama walang sangit pada pagi/sore hari"
+          ],
+          "commonRisks": [
+            "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk."
+          ],
+          "estimatedDayStart": 57,
+          "estimatedDayEnd": 67,
+          "hstStart": 57,
+          "hstEnd": 67,
+          "estimatedDateStart": "2025-06-24",
+          "estimatedDateEnd": "2025-07-04",
+          "estimatedStartDate": "2025-06-24",
+          "estimatedEndDate": "2025-07-04",
+          "status": "Terjadwal",
+          "notes": "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 11,
+          "order": 11,
+          "id": "season-padi-2-stage-11",
+          "name": "11. Pengisian Gabah",
+          "description": "Fase masak susu hingga masak tepung pada bulir gabah.",
+          "objective": "Fase masak susu hingga masak tepung pada bulir gabah.",
+          "recommendedActions": [
+            "Periksa persentase gabah bernas",
+            "Awasi gejala busuk leher malai (neck blast)"
+          ],
+          "successIndicators": [
+            "Periksa persentase gabah bernas",
+            "Awasi gejala busuk leher malai (neck blast)"
+          ],
+          "commonRisks": [
+            "Pastikan daun bendera tetap sehat dan hijau."
+          ],
+          "estimatedDayStart": 68,
+          "estimatedDayEnd": 80,
+          "hstStart": 68,
+          "hstEnd": 80,
+          "estimatedDateStart": "2025-07-05",
+          "estimatedDateEnd": "2025-07-17",
+          "estimatedStartDate": "2025-07-05",
+          "estimatedEndDate": "2025-07-17",
+          "status": "Terjadwal",
+          "notes": "Pastikan daun bendera tetap sehat dan hijau.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 12,
+          "order": 12,
+          "id": "season-padi-2-stage-12",
+          "name": "12. Pematangan",
+          "description": "Fase masak kuning dan pengeringan lahan bertahap menjelang panen.",
+          "objective": "Fase masak kuning dan pengeringan lahan bertahap menjelang panen.",
+          "recommendedActions": [
+            "Buka saluran pembuangan air agar tanah mengeras",
+            "Amati kematangan bulir hingga 90–95% gabah menguning keras"
+          ],
+          "successIndicators": [
+            "Buka saluran pembuangan air agar tanah mengeras",
+            "Amati kematangan bulir hingga 90–95% gabah menguning keras"
+          ],
+          "commonRisks": [
+            "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen."
+          ],
+          "estimatedDayStart": 81,
+          "estimatedDayEnd": 91,
+          "hstStart": 81,
+          "hstEnd": 91,
+          "estimatedDateStart": "2025-07-18",
+          "estimatedDateEnd": "2025-07-28",
+          "estimatedStartDate": "2025-07-18",
+          "estimatedEndDate": "2025-07-28",
+          "status": "Terjadwal",
+          "notes": "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 13,
+          "order": 13,
+          "id": "season-padi-2-stage-13",
+          "name": "13. Panen",
+          "description": "Pemanenan tepat waktu saat 90–95% bulir malai menguning bernas dan perontokan segera.",
+          "objective": "Pemanenan tepat waktu saat 90–95% bulir malai menguning bernas dan perontokan segera.",
+          "recommendedActions": [
+            "Potong padi dan gunakan alas terpal untuk menekan susut tercecer",
+            "Rontokkan gabah maksimal 24 jam setelah potong"
+          ],
+          "successIndicators": [
+            "Potong padi dan gunakan alas terpal untuk menekan susut tercecer",
+            "Rontokkan gabah maksimal 24 jam setelah potong"
+          ],
+          "commonRisks": [
+            "Estimasi tanggal panen varietas Inpari 32 HDB: ±92 HST."
+          ],
+          "estimatedDayStart": 92,
+          "estimatedDayEnd": 95,
+          "hstStart": 92,
+          "hstEnd": 95,
+          "estimatedDateStart": "2025-07-29",
+          "estimatedDateEnd": "2025-08-01",
+          "estimatedStartDate": "2025-07-29",
+          "estimatedEndDate": "2025-08-01",
+          "status": "Terjadwal",
+          "notes": "Estimasi tanggal panen varietas Inpari 32 HDB: ±92 HST.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        },
+        {
+          "stageNumber": 14,
+          "order": 14,
+          "id": "season-padi-2-stage-14",
+          "name": "14. Pascapanen dan Evaluasi",
+          "description": "Pengeringan GKP menjadi GKG (kadar air ≤14%), penyimpanan, dan evaluasi laba/rugi musim tanam.",
+          "objective": "Pengeringan GKP menjadi GKG (kadar air ≤14%), penyimpanan, dan evaluasi laba/rugi musim tanam.",
+          "recommendedActions": [
+            "Ukur kadar air gabah",
+            "Rekap seluruh biaya aktual, pendapatan panen, dan laba bersih musim tanam"
+          ],
+          "successIndicators": [
+            "Ukur kadar air gabah",
+            "Rekap seluruh biaya aktual, pendapatan panen, dan laba bersih musim tanam"
+          ],
+          "commonRisks": [
+            "Selesaikan evaluasi sebelum menutup musim tanam."
+          ],
+          "estimatedDayStart": 96,
+          "estimatedDayEnd": 102,
+          "hstStart": 96,
+          "hstEnd": 102,
+          "estimatedDateStart": "2025-08-02",
+          "estimatedDateEnd": "2025-08-08",
+          "estimatedStartDate": "2025-08-02",
+          "estimatedEndDate": "2025-08-08",
+          "status": "Terjadwal",
+          "notes": "Selesaikan evaluasi sebelum menutup musim tanam.",
+          "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+        }
+      ],
+      "createdAt": "2025-04-07T07:00:00Z",
+      "updatedAt": "2025-05-02T07:00:00Z"
+    }
+  ],
+  "cultivationTasks": [
+    {
+      "id": "ctask-alert-1792848695499",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "stageOrder": 6,
+      "category": "Pengendalian Hama & Penyakit",
+      "title": "Peringatan AI: Prioritas Diagnosis AI: Penyakit Hawar Daun Bakteri (HDB / Kresek)",
+      "scheduledDate": "2026-10-25",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Terapkan pengairan berselang (intermittent irrigation / macak-macak) dan hindari penggenangan air dalam terus-menerus. Hentikan sementara pupuk Urea (Nitrogen) dan tambahkan pupuk Kalium (KCl /ZK) untuk mempertebal dinding sel epidermis daun. Gunakan bakterisida berbahan aktif Tembaga Oksida (Nordox 56 WP) sesuai dosis label resmi bila serangan meluas. Verifikasi Lapangan: Lakukan Uji Eksudat Bakteri sederhana: potong melintang bagian daun di perbatasan sehat-sakit, celupkan ke air jernih dalam gelas transparan selama 5 menit; bila keluar untaian cairan keruh seperti asap, positif bakteri HDB (Xoo).",
+      "recommendationSource": "Mesin Prediksi Peringatan Dini AI",
+      "createdAt": "2026-10-24T13:31:35.499Z"
+    },
+    {
+      "id": "ctask-diag-1792843208126",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "stageOrder": 8,
+      "category": "Pengendalian Hama & Penyakit",
+      "title": "Evaluasi Lapangan Pasca Diagnosis: Blas (Pyricularia oryzae)",
+      "scheduledDate": "2026-10-31",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Periksa 20 rumpun secara diagonal untuk menghitung persentase keparahan bercak daun.",
+      "recommendationSource": "Rekomendasi Kamera AI & Pakar Fitopatologi",
+      "createdAt": "2026-10-24T12:00:08.126Z"
+    },
+    {
+      "id": "season-padi-1-task-stage-1",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 1,
+      "stageOrder": 1,
+      "activityType": "Persiapan Lahan",
+      "title": "Pengolahan Tanah (Bajak & Garu) serta Perbaikan Saluran Irigasi",
+      "scheduledDate": "2025-03-22",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Estimasi waktu persiapan untuk luas 1.2 Ha.",
+      "completedDate": "2025-03-22",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-2",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 2,
+      "stageOrder": 2,
+      "activityType": "Persiapan Benih",
+      "title": "Seleksi & Perendaman Benih Padi Ciherang (±30 kg)",
+      "scheduledDate": "2025-03-24",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha).",
+      "completedDate": "2025-03-24",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-3",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 3,
+      "stageOrder": 3,
+      "activityType": "Persemaian",
+      "title": "Penaburan & Pemeliharaan Bibit Persemaian (18 HSS)",
+      "scheduledDate": "2025-03-25",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal.",
+      "completedDate": "2025-03-25",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-4",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 4,
+      "stageOrder": 4,
+      "activityType": "Penanaman",
+      "title": "Pindah Tanam Padi Ciherang (Pindah Tanam (Jajar Legowo 2:1))",
+      "scheduledDate": "2025-04-12",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Tanggal 0 HST menjadi titik acuan kalender musim tanam.",
+      "completedDate": "2025-04-12",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-5",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 5,
+      "stageOrder": 5,
+      "activityType": "Adaptasi Awal",
+      "title": "Pemeriksaan Adaptasi Bibit & Penyulaman Rumpun Kosong (5–7 HST)",
+      "scheduledDate": "2025-04-14",
+      "status": "Selesai",
+      "priority": "Sedang",
+      "notes": "Penyulaman wajib selesai sebelum pemupukan pertama.",
+      "completedDate": "2025-04-14",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-6",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 6,
+      "stageOrder": 6,
+      "activityType": "Pemantauan Hama & Penyakit",
+      "title": "Pengamatan Pertumbuhan Anakan & Pembacaan Bagan Warna Daun (BWD)",
+      "scheduledDate": "2025-04-20",
+      "status": "Terjadwal",
+      "priority": "Normal",
+      "notes": "Fase vegetatif menentukan jumlah malai produktif per rumpun.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-7",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 7,
+      "stageOrder": 7,
+      "activityType": "Pemupukan",
+      "title": "Pemupukan Berimbang Bertahap (Estimasi Total Urea ±240 kg & NPK ±360 kg)",
+      "scheduledDate": "2025-04-19",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-8",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 8,
+      "stageOrder": 8,
+      "activityType": "Pengairan",
+      "title": "Pengaturan Pengairan Berselang (AWD) & Penyiangan Gulma",
+      "scheduledDate": "2025-04-24",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Pengairan berselang memperkuat batang dan menekan perkembangan wereng.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-9",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 9,
+      "stageOrder": 9,
+      "activityType": "Pemantauan Hama & Penyakit",
+      "title": "Inspeksi Rutin Agroekosistem (Blas, Wereng, Penggerek & Musuh Alami)",
+      "scheduledDate": "2025-04-27",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-10",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 10,
+      "stageOrder": 10,
+      "activityType": "Pembungaan & Pengisian",
+      "title": "Pemantauan Keserempakan Keluar Malai & Kecukupan Air Pembungaan",
+      "scheduledDate": "2025-06-11",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-11",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 11,
+      "stageOrder": 11,
+      "activityType": "Pembungaan & Pengisian",
+      "title": "Pemeriksaan Pengisian Bulir Gabah & Kesehatan Leher Malai",
+      "scheduledDate": "2025-06-22",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Pastikan daun bendera tetap sehat dan hijau.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-12",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 12,
+      "stageOrder": 12,
+      "activityType": "Pengairan",
+      "title": "Pengeringan Petakan Sawah (10–14 Hari Sebelum Panen)",
+      "scheduledDate": "2025-07-05",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-13",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 13,
+      "stageOrder": 13,
+      "activityType": "Panen",
+      "title": "Pelaksanaan Panen Padi Ciherang & Pencatatan Hasil GKP",
+      "scheduledDate": "2025-07-16",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Estimasi tanggal panen varietas Ciherang: ±95 HST.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-1-task-stage-14",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 14,
+      "stageOrder": 14,
+      "activityType": "Pascapanen",
+      "title": "Penjemuran Gabah (Kadar Air ≤14%) & Evaluasi Laba/Rugi Musim Tanam",
+      "scheduledDate": "2025-07-20",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Selesaikan evaluasi sebelum menutup musim tanam.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Ciherang — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-1",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 1,
+      "stageOrder": 1,
+      "activityType": "Persiapan Lahan",
+      "title": "Pengolahan Tanah (Bajak & Garu) serta Perbaikan Saluran Irigasi",
+      "scheduledDate": "2025-04-07",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Estimasi waktu persiapan untuk luas 0.8 Ha.",
+      "completedDate": "2025-04-07",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-2",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 2,
+      "stageOrder": 2,
+      "activityType": "Persiapan Benih",
+      "title": "Seleksi & Perendaman Benih Padi Inpari 32 HDB (±20 kg)",
+      "scheduledDate": "2025-04-09",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Kebutuhan benih dihitung memakai parameter sistem Pindah Tanam (Jajar Legowo 2:1) (25 kg/Ha).",
+      "completedDate": "2025-04-09",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-3",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 3,
+      "stageOrder": 3,
+      "activityType": "Persemaian",
+      "title": "Penaburan & Pemeliharaan Bibit Persemaian (18 HSS)",
+      "scheduledDate": "2025-04-10",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Jangan mencabut bibit terlalu tua agar anakan produktif maksimal.",
+      "completedDate": "2025-04-10",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-4",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 4,
+      "stageOrder": 4,
+      "activityType": "Penanaman",
+      "title": "Pindah Tanam Padi Inpari 32 HDB (Pindah Tanam (Jajar Legowo 2:1))",
+      "scheduledDate": "2025-04-28",
+      "status": "Selesai",
+      "priority": "Tinggi",
+      "notes": "Tanggal 0 HST menjadi titik acuan kalender musim tanam.",
+      "completedDate": "2025-04-28",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-5",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 5,
+      "stageOrder": 5,
+      "activityType": "Adaptasi Awal",
+      "title": "Pemeriksaan Adaptasi Bibit & Penyulaman Rumpun Kosong (5–7 HST)",
+      "scheduledDate": "2025-04-30",
+      "status": "Selesai",
+      "priority": "Sedang",
+      "notes": "Penyulaman wajib selesai sebelum pemupukan pertama.",
+      "completedDate": "2025-04-30",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-6",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 6,
+      "stageOrder": 6,
+      "activityType": "Pemantauan Hama & Penyakit",
+      "title": "Pengamatan Pertumbuhan Anakan & Pembacaan Bagan Warna Daun (BWD)",
+      "scheduledDate": "2025-05-06",
+      "status": "Terjadwal",
+      "priority": "Normal",
+      "notes": "Fase vegetatif menentukan jumlah malai produktif per rumpun.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-7",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 7,
+      "stageOrder": 7,
+      "activityType": "Pemupukan",
+      "title": "Pemupukan Berimbang Bertahap (Estimasi Total Urea ±160 kg & NPK ±240 kg)",
+      "scheduledDate": "2025-05-05",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Estimasi awal; sesuaikan dengan Perangkat Uji Tanah Sawah (PUTS) setempat.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-8",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 8,
+      "stageOrder": 8,
+      "activityType": "Pengairan",
+      "title": "Pengaturan Pengairan Berselang (AWD) & Penyiangan Gulma",
+      "scheduledDate": "2025-05-10",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Pengairan berselang memperkuat batang dan menekan perkembangan wereng.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-9",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 9,
+      "stageOrder": 9,
+      "activityType": "Pemantauan Hama & Penyakit",
+      "title": "Inspeksi Rutin Agroekosistem (Blas, Wereng, Penggerek & Musuh Alami)",
+      "scheduledDate": "2025-05-13",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Sesuai prinsip PHT: Jangan melakukan penyemprotan kimia terjadwal tanpa dasar pemantauan.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-10",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 10,
+      "stageOrder": 10,
+      "activityType": "Pembungaan & Pengisian",
+      "title": "Pemantauan Keserempakan Keluar Malai & Kecukupan Air Pembungaan",
+      "scheduledDate": "2025-06-24",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Hindari penyemprotan pada pukul 08:00–11:00 saat bunga padi sedang mekar menyerbuk.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-11",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 11,
+      "stageOrder": 11,
+      "activityType": "Pembungaan & Pengisian",
+      "title": "Pemeriksaan Pengisian Bulir Gabah & Kesehatan Leher Malai",
+      "scheduledDate": "2025-07-05",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Pastikan daun bendera tetap sehat dan hijau.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-12",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 12,
+      "stageOrder": 12,
+      "activityType": "Pengairan",
+      "title": "Pengeringan Petakan Sawah (10–14 Hari Sebelum Panen)",
+      "scheduledDate": "2025-07-18",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Pengeringan lahan mempercepat pematangan serempak dan memudahkan panen.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-13",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 13,
+      "stageOrder": 13,
+      "activityType": "Panen",
+      "title": "Pelaksanaan Panen Padi Inpari 32 HDB & Pencatatan Hasil GKP",
+      "scheduledDate": "2025-07-29",
+      "status": "Terjadwal",
+      "priority": "Tinggi",
+      "notes": "Estimasi tanggal panen varietas Inpari 32 HDB: ±92 HST.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    },
+    {
+      "id": "season-padi-2-task-stage-14",
+      "ownerId": "usr-budi-santoso",
+      "seasonId": "season-padi-2",
+      "farmId": "lahan-2",
+      "farmName": "Lahan Sawah",
+      "stageNumber": 14,
+      "stageOrder": 14,
+      "activityType": "Pascapanen",
+      "title": "Penjemuran Gabah (Kadar Air ≤14%) & Evaluasi Laba/Rugi Musim Tanam",
+      "scheduledDate": "2025-08-02",
+      "status": "Terjadwal",
+      "priority": "Sedang",
+      "notes": "Selesaikan evaluasi sebelum menutup musim tanam.",
+      "recommendationSource": "Deskripsi Varietas BB Padi Kementan RI (Inpari 32 HDB — Sistem Pindah Tanam (Jajar Legowo 2:1))"
+    }
+  ],
+  "seasonActivityLogs": [
+    {
+      "id": "act-diag-1792843208126",
+      "ownerId": "usr-budi-santoso",
+      "farmId": "lahan-1",
+      "seasonId": "season-padi-1",
+      "activityType": "Pengendalian OPT",
+      "executionDate": "2026-10-24",
+      "inputUsed": "Diagnosis Kamera AI: Blas (Pyricularia oryzae)",
+      "quantity": 1,
+      "unit": "pengamatan",
+      "unitCostRp": 0,
+      "actualCostRp": 0,
+      "notes": "Hentikan sementara pemupukan Nitrogen (Urea) berlebih karena memicu jaringan daun menjadi lunak dan rentan jamur. (Keyakinan 92%)",
+      "createdAt": "2026-10-24T12:00:08.126Z"
+    },
+    {
+      "id": "act-log-1",
+      "farmId": "lahan-1",
+      "seasonId": "season-padi-1",
+      "ownerId": "usr-budi-santoso",
+      "activityType": "Olah Lahan",
+      "executionDate": "2025-04-02",
+      "inputUsed": "Traktor Rotari & Kompos Jerami Matang",
+      "quantity": 1.2,
+      "unit": "Ha",
+      "unitPriceRp": 1800000,
+      "actualCostRp": 2160000,
+      "notes": "Pembajakan pertama dan pelumpuran merata sedalam 20 cm.",
+      "createdAt": "2025-04-02T16:00:00Z"
+    },
+    {
+      "id": "act-log-2",
+      "farmId": "lahan-1",
+      "seasonId": "season-padi-1",
+      "ownerId": "usr-budi-santoso",
+      "activityType": "Semai",
+      "executionDate": "2025-03-26",
+      "inputUsed": "Benih Padi Ciherang Label Ungu Bersertifikat",
+      "quantity": 30,
+      "unit": "kg",
+      "unitPriceRp": 14000,
+      "actualCostRp": 420000,
+      "notes": "Seleksi benih bernas dengan air garam dan pemeraman 48 jam.",
+      "createdAt": "2025-03-26T10:00:00Z"
+    },
+    {
+      "id": "act-log-3",
+      "farmId": "lahan-1",
+      "seasonId": "season-padi-1",
+      "ownerId": "usr-budi-santoso",
+      "activityType": "Tanam",
+      "executionDate": "2025-04-12",
+      "inputUsed": "Regu Tanam Jajar Legowo 2:1",
+      "quantity": 1.2,
+      "unit": "Ha",
+      "unitPriceRp": 1600000,
+      "actualCostRp": 1920000,
+      "notes": "Pindah tanam bibit umur 17 HSS sebanyak 2–3 batang/rumpun.",
+      "createdAt": "2025-04-12T15:30:00Z"
+    },
+    {
+      "id": "act-log-4",
+      "farmId": "lahan-1",
+      "seasonId": "season-padi-1",
+      "ownerId": "usr-budi-santoso",
+      "activityType": "Pemupukan",
+      "executionDate": "2025-04-20",
+      "inputUsed": "Pupuk Urea (90 kg) + NPK Phonska (180 kg)",
+      "quantity": 270,
+      "unit": "kg",
+      "unitPriceRp": 2600,
+      "actualCostRp": 702000,
+      "notes": "Pemupukan dasar tahap I pada 8 HST kondisi air macak-macak.",
+      "createdAt": "2025-04-20T09:30:00Z"
+    }
+  ],
+  "seasonExpenseRecords": [
+    {
+      "id": "sexp-1",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "category": "Sewa Alat",
+      "description": "Sewa Traktor Bajak & Garu Lumpur (1,2 Ha)",
+      "quantity": 1.2,
+      "unit": "Ha",
+      "unitPriceRp": 1800000,
+      "totalRp": 2160000,
+      "date": "2025-04-02",
+      "notes": "Tercatat otomatis dari aktivitas Olah Lahan",
+      "linkedActivityId": "act-log-1",
+      "createdAt": "2025-04-02T16:00:00Z"
+    },
+    {
+      "id": "sexp-2",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "category": "Benih",
+      "description": "Benih Padi Ciherang Bersertifikat Label Ungu",
+      "quantity": 30,
+      "unit": "kg",
+      "unitPriceRp": 14000,
+      "totalRp": 420000,
+      "date": "2025-03-26",
+      "notes": "Tercatat dari aktivitas Semai",
+      "linkedActivityId": "act-log-2",
+      "createdAt": "2025-03-26T10:00:00Z"
+    },
+    {
+      "id": "sexp-3",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "category": "Tenaga Kerja",
+      "description": "Upah Tanam Jajar Legowo 2:1",
+      "quantity": 1.2,
+      "unit": "Ha",
+      "unitPriceRp": 1600000,
+      "totalRp": 1920000,
+      "date": "2025-04-12",
+      "notes": "Tercatat dari aktivitas Tanam",
+      "linkedActivityId": "act-log-3",
+      "createdAt": "2025-04-12T15:30:00Z"
+    },
+    {
+      "id": "sexp-4",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "category": "Pupuk",
+      "description": "Pupuk Urea (90 kg) + NPK Phonska (180 kg)",
+      "quantity": 270,
+      "unit": "kg",
+      "unitPriceRp": 2600,
+      "totalRp": 702000,
+      "date": "2025-04-20",
+      "notes": "Pemupukan dasar 8 HST",
+      "linkedActivityId": "act-log-4",
+      "createdAt": "2025-04-20T09:30:00Z"
+    },
+    {
+      "id": "sexp-5",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "category": "Irigasi",
+      "description": "Iuran P3A Dharma Tirta Musim Tanam II",
+      "quantity": 1,
+      "unit": "Musim",
+      "unitPriceRp": 350000,
+      "totalRp": 350000,
+      "date": "2025-04-15",
+      "notes": "Biaya operasional air irigasi teknis",
+      "createdAt": "2025-04-15T11:00:00Z"
+    }
+  ],
+  "seasonHarvestRecords": [
+    {
+      "id": "sharv-1",
+      "seasonId": "season-padi-1",
+      "farmId": "lahan-1",
+      "ownerId": "usr-budi-santoso",
+      "harvestDate": "2025-02-18",
+      "harvestedAreaHa": 1.2,
+      "actualYieldKg": 8160,
+      "moisturePct": 18.5,
+      "sellingPricePerKgRp": 6600,
+      "grossRevenueRp": 53856000,
+      "harvestCostRp": 4200000,
+      "notes": "Rekor referensi panen Musim Tanam I sebelumnya (Combine Harvester).",
+      "createdAt": "2025-02-18T17:00:00Z"
+    }
+  ],
+  "cropProfiles": [
+    {
+      "id": "prof-padi-ciherang",
+      "ownerId": "usr-budi-santoso",
+      "plotId": "lahan-1",
+      "namaTanaman": "Padi Sawah Blok Utama (Lahan 1)",
+      "jenis": "Padi Inbrida — Varietas Ciherang",
+      "tanggalTanam": "2025-04-12",
+      "persyaratanNutrisi": "Urea 200 kg/Ha (3 tahap BWD) + NPK Phonska 300 kg/Ha + Kompos Jerami 2 ton/Ha",
+      "kebutuhanAir": "Pengairan berselang (AWD) macak-macak 3–5 cm; kelembapan tanah optimal 65–85%",
+      "toleransiSuhu": "22°C – 32°C (Optimal pembentukan anakan & pengisian bulir)",
+      "tempMinC": 22,
+      "tempMaxC": 32,
+      "moistureMinPct": 65,
+      "moistureMaxPct": 85,
+      "catatanKhusus": "Peka terhadap Blas daun bila kelembapan udara >85% disertai embun pagi dan kelebihan pupuk Nitrogen.",
+      "updatedAt": "2025-05-02T07:00:00Z"
+    },
+    {
+      "id": "prof-padi-inpari32",
+      "ownerId": "usr-budi-santoso",
+      "plotId": "lahan-2",
+      "namaTanaman": "Padi Sawah Blok Timur (Lahan 2)",
+      "jenis": "Padi Inbrida — Varietas Inpari 32 HDB",
+      "tanggalTanam": "2025-04-28",
+      "persyaratanNutrisi": "Urea 175 kg/Ha + NPK Phonska 300 kg/Ha + Silika cair saat vegetatif",
+      "kebutuhanAir": "Macak-macak 2–3 cm pada fase adaptasi awal (0–10 HST); kelembapan optimal 65–85%",
+      "toleransiSuhu": "23°C – 33°C (Tahan Kresek/HDB, perlu pemantauan penggerek batang)",
+      "tempMinC": 23,
+      "tempMaxC": 33,
+      "moistureMinPct": 65,
+      "moistureMaxPct": 85,
+      "catatanKhusus": "Tahan Hawar Daun Bakteri (Kresek). Pantau keong mas pada 1–10 HST dan pasang saringan saluran masuk.",
+      "updatedAt": "2025-05-02T07:15:00Z"
+    },
+    {
+      "id": "prof-jagung-bisi18",
+      "ownerId": "usr-budi-santoso",
+      "plotId": "lahan-3",
+      "namaTanaman": "Jagung Hibrida Tegalan (Lahan 3)",
+      "jenis": "Jagung Hibrida — Varietas Bisi 18",
+      "tanggalTanam": "2025-04-10",
+      "persyaratanNutrisi": "NPK 350 kg/Ha + Urea 250 kg/Ha (dibenamkan di samping batang pada 15 & 35 HST)",
+      "kebutuhanAir": "Lembap 50–70% tanpa genangan; parit drainase antar bedengan wajib lancar",
+      "toleransiSuhu": "21°C – 34°C (Sangat butuh penyinaran matahari penuh)",
+      "tempMinC": 21,
+      "tempMaxC": 34,
+      "moistureMinPct": 50,
+      "moistureMaxPct": 75,
+      "catatanKhusus": "Hindari genangan air >24 jam karena akar jagung rentan busuk dan daun bawah menguning.",
+      "updatedAt": "2025-05-02T07:30:00Z"
+    }
+  ]
+}

@@ -1,0 +1,1009 @@
+# MASTER PROMPT — TANI CERDAS AI
+## Platform Pertanian Cerdas Indonesia Berbasis AI, Kamera, Agronomi, dan Smart Farming
+
+**PERAN ANDA**
+
+Bertindaklah sebagai gabungan Senior Full-Stack Engineer, Software Architect, AI Engineer, Computer Vision Engineer, Agronom Indonesia, UI/UX Designer, Database Engineer, Security Engineer, dan Quality Assurance Engineer.
+
+Tugas Anda adalah membangun aplikasi pertanian bernama **TaniCerdas AI**, sebuah platform pertanian digital yang membantu petani Indonesia mengelola seluruh siklus budidaya tanaman, dari perencanaan lahan sampai panen, dengan fokus utama pada tanaman padi.
+
+Jangan hanya membuat landing page, desain statis, mockup, atau dashboard palsu. Bangun aplikasi yang benar-benar berjalan, memiliki navigasi berfungsi, pengelolaan data nyata, validasi input, penanganan kesalahan, integrasi AI, dan arsitektur yang dapat dikembangkan menjadi produk agritech profesional.
+
+Nama aplikasi: **TaniCerdas AI**
+
+Slogan: **Sahabat Petani, Panen Maksimal.**
+
+Bahasa utama: Bahasa Indonesia yang mudah dipahami petani, profesional, tidak terlalu teknis, dan sesuai konteks pertanian Indonesia.
+
+Target pengguna: Petani kecil dan besar, kelompok tani, penyuluh pertanian, pengelola lahan, serta pelaku agribisnis Indonesia.
+
+---
+
+# 1. TUJUAN UTAMA APLIKASI
+
+Bangun satu aplikasi terpadu yang memungkinkan pengguna:
+
+1. Mengelola banyak lahan dan komoditas pertanian.
+2. Membuat rencana budidaya dari pengolahan lahan sampai panen.
+3. Memilih varietas berdasarkan kondisi lahan, iklim, air, dan lokasi.
+4. Menghitung kebutuhan benih, pupuk, pestisida, tenaga kerja, dan biaya.
+5. Memotret tanaman menggunakan kamera HP untuk membantu diagnosis penyakit, hama, dan gangguan pertumbuhan.
+6. Memperoleh rekomendasi penanganan berdasarkan referensi agronomi yang dapat diverifikasi.
+7. Mendapatkan informasi bahan aktif pestisida, dosis sesuai label resmi, metode aplikasi, APD, dan interval pra-panen jika datanya tersedia.
+8. Memperoleh kalender budidaya dan pengingat otomatis.
+9. Memantau cuaca, kelembapan, kondisi lahan, dan kebutuhan air jika sumber datanya tersedia.
+10. Mencatat kegiatan, pembelian sarana produksi, biaya, hasil panen, pendapatan, dan keuntungan.
+11. Mengakses panduan, kalender, riwayat, dan data penting dalam mode offline.
+12. Menggunakan asisten AI pertanian untuk bertanya dalam bahasa sehari-hari.
+13. Mengembangkan sistem dari padi ke jagung, kedelai, cabai, bawang, tomat, sayuran, buah, dan tanaman perkebunan.
+
+Seluruh fitur harus saling terhubung. Hasil diagnosis dapat menjadi catatan lahan dan tindak lanjut, kalender harus terhubung dengan fase tanaman, dan hasil panen harus terhubung dengan laporan biaya.
+
+# 2. ATURAN PENGEMBANGAN WAJIB
+
+Sebelum mengimplementasikan aplikasi, analisis kebutuhan dan rancang arsitektur yang tepat. Setelah itu, langsung implementasikan aplikasi secara bertahap dalam proyek yang sama.
+
+Ketentuan wajib:
+
+- Gunakan TypeScript dengan tipe data yang jelas apabila stack yang dipilih mendukungnya.
+- Pisahkan komponen UI, business logic, layanan AI, pengelolaan data, dan integrasi eksternal.
+- Gunakan komponen reusable dan struktur direktori yang konsisten.
+- Gunakan penyimpanan lokal dan backend yang sesuai kebutuhan.
+- Jangan menaruh API key, token, atau kredensial rahasia di frontend.
+- Jangan membuat endpoint, SDK, atau metode integrasi yang tidak benar-benar tersedia.
+- Jangan mengarang hasil analisis AI, harga pasar, prakiraan cuaca, data registrasi pestisida, maupun hasil panen.
+- Jangan menggunakan data contoh seolah-olah data nyata.
+- Jika data eksternal belum tersedia, tampilkan status yang jujur dan sediakan mekanisme untuk memasukkan atau menghubungkan data tersebut.
+- Semua tombol, formulir, navigasi, pencarian, filter, modal, dan tindakan utama harus memiliki fungsi yang jelas.
+- Hindari halaman kosong, tombol dekoratif, tautan mati, dan fitur yang hanya memberikan notifikasi sukses palsu.
+- Jangan menghapus fitur yang sudah selesai ketika menambahkan fitur baru.
+- Jangan menyimpan seluruh aplikasi dalam satu file besar.
+- Jangan berhenti setelah membuat dashboard atau prototype.
+- Jangan meninggalkan error TypeScript, import yang rusak, atau dependensi yang tidak terpasang.
+- Jangan mengklaim integrasi atau pengujian berhasil sebelum benar-benar memverifikasinya.
+
+Apabila terdapat keterbatasan platform atau API, implementasikan alternatif yang nyata, jelaskan batasannya, dan buat struktur kode yang memungkinkan integrasi lanjutan.
+
+# 3. STACK DAN ARSITEKTUR
+
+Pilih teknologi yang kompatibel dengan lingkungan Google AI Studio saat ini. Utamakan stack berikut jika didukung:
+
+- Frontend: React, TypeScript, dan Vite atau stack frontend setara yang didukung lingkungan.
+- UI: Tailwind CSS atau sistem styling konsisten, dengan komponen aksesibel.
+- AI: Gemini API melalui integrasi server-side yang aman.
+- Backend: Node.js dengan TypeScript atau backend yang secara resmi didukung lingkungan.
+- Database: Firebase Firestore atau database terkelola yang sesuai.
+- Authentication: Firebase Authentication atau mekanisme autentikasi aman yang tersedia.
+- Penyimpanan foto: Firebase Storage atau penyimpanan objek yang sesuai.
+- Offline: PWA, Service Worker, IndexedDB, dan cache terkontrol.
+- Pengingat: notifikasi lokal atau push notification melalui mekanisme yang benar-benar didukung.
+- Peta: integrasi peta opsional melalui penyedia resmi.
+- Cuaca: API cuaca yang dikonfigurasi secara eksplisit.
+- Grafik: library grafik ringan yang kompatibel dengan stack.
+
+Jangan memaksakan seluruh layanan eksternal apabila belum tersedia kredensial atau konfigurasi. Buat adapter dan interface untuk setiap layanan eksternal agar dapat diganti tanpa merombak aplikasi.
+
+Arsitektur minimal:
+
+1. Presentation layer.
+2. Application/business logic layer.
+3. Data access layer.
+4. AI service layer.
+5. Agronomy knowledge layer.
+6. Notification and scheduling layer.
+7. External integrations layer.
+8. Security, validation, and audit layer.
+
+Gunakan validasi server-side untuk semua tindakan penting. Terapkan autentikasi dan otorisasi di backend, bukan hanya menyembunyikan tombol di frontend.
+
+# 4. DESAIN UI/UX PREMIUM
+
+Buat antarmuka yang terasa seperti produk agritech modern, bersih, elegan, mudah digunakan, dan ramah bagi petani yang tidak terbiasa dengan aplikasi kompleks.
+
+## Identitas visual
+
+Nama: TaniCerdas AI.
+
+Gunakan palet:
+
+- Hijau utama: `#15803D`
+- Hijau tua: `#14532D`
+- Hijau lembut: `#DCFCE7`
+- Putih: `#FFFFFF`
+- Latar belakang: `#F7FAF7`
+- Teks utama: `#17231B`
+- Teks sekunder: `#647067`
+- Kuning peringatan: `#F59E0B`
+- Merah untuk bahaya: `#DC2626`
+
+Gunakan warna berdasarkan fungsi, bukan dekorasi. Status bahaya harus jelas, tetapi jangan membuat seluruh aplikasi terasa seperti sistem peringatan.
+
+## Karakter desain
+
+- Mobile-first dengan area sentuh minimal sekitar 44 × 44 piksel.
+- Navigasi bawah yang konsisten.
+- Kartu ringkas dengan hierarki informasi yang jelas.
+- Tipografi mudah dibaca di luar ruangan.
+- Ikon konsisten dan mudah dikenali.
+- Foto tanaman yang relevan, bukan ilustrasi generik berlebihan.
+- Animasi singkat, halus, dan tidak mengganggu.
+- Formulir singkat dengan pilihan yang mudah dipahami.
+- Dukungan ukuran layar kecil mulai dari lebar sekitar 320 piksel.
+- Tidak memaksa pengguna melakukan zoom.
+- Tidak ada horizontal overflow.
+- Gunakan skeleton loading hanya saat memang diperlukan.
+- Hindari gradient berlebihan, glassmorphism yang mengurangi keterbacaan, dan terlalu banyak kartu kecil.
+- Sediakan mode terang sebagai default dan mode gelap sebagai opsi jika implementasinya stabil.
+
+## Navigasi bawah
+
+Buat lima menu utama:
+
+1. Beranda.
+2. Lahan.
+3. Kamera AI.
+4. Agenda.
+5. Profil.
+
+Fitur Panduan, Konsultasi AI, Penyakit dan Hama, Keuangan, Laporan, serta Pengaturan dapat diakses melalui dashboard atau menu tambahan.
+
+Tombol Kamera AI harus menonjol, tetapi tidak boleh menghalangi navigasi atau konten penting.
+
+# 5. HALAMAN DAN MODUL APLIKASI
+
+## A. Splash screen
+
+Buat layar pembuka dengan logo daun, nama TaniCerdas AI, slogan, dan ilustrasi pertanian Indonesia.
+
+Tampilkan tombol masuk atau mulai apabila pengguna belum login.
+
+Splash screen harus singkat. Jangan membuat pengguna menunggu animasi panjang.
+
+## B. Login dan pendaftaran
+
+Sediakan:
+
+- Pendaftaran menggunakan nama dan alamat email atau metode autentikasi yang tersedia.
+- Login.
+- Logout.
+- Pemulihan akun.
+- Persetujuan privasi.
+- Validasi input.
+- Penanganan error autentikasi.
+- Profil pengguna.
+
+Jangan menyimpan password dalam plaintext.
+
+Jangan mewajibkan login untuk membuka panduan publik atau fitur offline dasar yang tidak memerlukan akun.
+
+## C. Dashboard
+
+Tampilkan:
+
+- Sapaan pengguna.
+- Ringkasan lahan aktif.
+- Total luas lahan.
+- Jumlah tanaman atau komoditas aktif.
+- Fase pertumbuhan tanaman.
+- Agenda kegiatan hari ini.
+- Pengingat yang mendekati tenggat.
+- Informasi cuaca jika API tersedia.
+- Status sinkronisasi data.
+- Tombol cepat kamera AI.
+- Tombol tambah lahan.
+- Tombol mulai budidaya.
+- Tombol konsultasi AI.
+- Ringkasan biaya dan estimasi panen.
+
+Dashboard harus mengambil data aktual dari penyimpanan. Jangan menampilkan angka statistik palsu.
+
+Jika belum ada data, tampilkan empty state dengan tombol tindakan, misalnya “Tambahkan Lahan Pertama”.
+
+## D. Pengelolaan lahan
+
+Pengguna dapat menambahkan, mengedit, melihat, mengarsipkan, dan menghapus lahan sesuai hak akses.
+
+Data lahan minimal:
+
+- Nama lahan.
+- Lokasi administratif.
+- Koordinat opsional.
+- Luas lahan dan satuan.
+- Status kepemilikan atau pengelolaan.
+- Jenis tanah jika diketahui.
+- Sumber air dan pola irigasi.
+- Riwayat komoditas.
+- Catatan lahan.
+- Foto lahan.
+- Kondisi awal.
+- Riwayat tindakan budidaya.
+
+Sediakan tampilan daftar dan detail lahan.
+
+Satu pengguna dapat mengelola banyak lahan dengan tanaman dan musim berbeda. Pastikan seluruh data memiliki relasi yang benar.
+
+## E. Modul tanaman dan musim tanam
+
+Sediakan pilihan komoditas dengan padi sebagai komoditas unggulan.
+
+Data setiap musim tanam:
+
+- Komoditas.
+- Varietas.
+- Lahan.
+- Tanggal mulai.
+- Tanggal semai jika relevan.
+- Tanggal tanam atau pindah tanam.
+- Sistem budidaya.
+- Luas tanam.
+- Target hasil.
+- Kondisi awal.
+- Catatan agronomi.
+- Status musim.
+- Estimasi panen beserta rentang ketidakpastiannya.
+
+Dukung lebih dari satu musim tanam dan beberapa tanaman dalam satu akun.
+
+Jangan menggunakan satu kalender global untuk seluruh lahan.
+
+# 6. MESIN PERENCANAAN BUDIDAYA PADI
+
+Buat modul budidaya yang dibagi menjadi fase-fase berikut.
+
+### Fase 1 — Persiapan lahan
+
+- Pemeriksaan kondisi lahan.
+- Pengolahan dan perataan tanah.
+- Persiapan irigasi.
+- Pemeriksaan riwayat tanaman.
+- Pengambilan sampel tanah jika tersedia.
+- Perencanaan biaya dan kebutuhan alat.
+
+### Fase 2 — Benih dan persemaian
+
+- Pemilihan varietas.
+- Kualitas dan sumber benih.
+- Kebutuhan benih berdasarkan luas dan metode tanam.
+- Pengingat persiapan media semai.
+- Pencatatan tanggal semai.
+- Pemeriksaan kesehatan bibit.
+
+### Fase 3 — Penanaman
+
+- Penentuan waktu tanam.
+- Rekomendasi sistem tanam.
+- Pengaturan jarak dan populasi tanaman sesuai metode.
+- Pencatatan jumlah benih atau bibit.
+- Pengingat pemeriksaan awal setelah tanam.
+
+### Fase 4 — Pemupukan
+
+- Rencana pemupukan berdasarkan fase tanaman.
+- Jenis pupuk dan kandungan unsur hara.
+- Perhitungan kebutuhan berdasarkan luas.
+- Pencatatan dosis aktual.
+- Pencatatan tanggal dan biaya.
+- Penyesuaian berdasarkan kondisi tanah dan rekomendasi setempat.
+
+Jangan menetapkan satu dosis pupuk universal untuk seluruh lahan.
+
+Jika data tanah, varietas, dan rekomendasi setempat belum tersedia, tampilkan rekomendasi awal sebagai perkiraan dan jelaskan keterbatasannya.
+
+### Fase 5 — Pengairan dan pemeliharaan
+
+- Jadwal pemeriksaan air.
+- Pengamatan pertumbuhan.
+- Pengelolaan gulma.
+- Pemeriksaan kesehatan tanaman.
+- Pencatatan kerusakan akibat cuaca.
+- Pengingat pemeliharaan sesuai fase tanaman.
+
+### Fase 6 — Hama dan penyakit
+
+- Pemantauan rutin.
+- Pencatatan gejala.
+- Diagnosis berbasis kamera.
+- Pengendalian terpadu.
+- Rekomendasi tindakan.
+- Pemantauan hasil pengendalian.
+- Peringatan potensi resistensi jika relevan.
+
+### Fase 7 — Pembungaan dan pengisian gabah
+
+- Pemantauan fase generatif.
+- Pemeriksaan kesehatan tanaman.
+- Pemantauan air dan cuaca.
+- Pengingat inspeksi lapangan.
+- Pembaruan estimasi panen.
+
+### Fase 8 — Panen dan pascapanen
+
+- Estimasi jendela panen.
+- Pemeriksaan kematangan.
+- Pencatatan tanggal panen.
+- Hasil gabah.
+- Kadar air jika diukur.
+- Kehilangan hasil jika diketahui.
+- Biaya panen.
+- Pendapatan.
+- Evaluasi musim tanam.
+
+Setiap fase memiliki status: Belum Dimulai, Terjadwal, Sedang Berjalan, Selesai, atau Terlewat.
+
+Sediakan penyesuaian manual. AI tidak boleh mengubah jadwal kritis secara diam-diam.
+
+# 7. KAMERA AI DAN COMPUTER VISION
+
+Buat fitur pemeriksaan tanaman yang benar-benar menggunakan gambar pengguna.
+
+Fitur:
+
+- Akses kamera HP melalui mekanisme yang didukung browser atau perangkat.
+- Pilih gambar dari galeri.
+- Pratinjau sebelum analisis.
+- Pemotongan gambar.
+- Pengambilan ulang.
+- Panduan fokus, jarak, dan pencahayaan.
+- Pemilihan komoditas.
+- Pemilihan bagian tanaman.
+- Riwayat foto.
+- Penghapusan foto.
+- Persetujuan unggah gambar.
+- Indikator progres analisis.
+- Penanganan jaringan gagal.
+- Penyimpanan hasil yang dapat ditautkan ke lahan.
+
+Bagian yang dapat dianalisis meliputi daun, batang, akar yang terlihat, buah, bunga, dan kondisi keseluruhan tanaman.
+
+## Pipeline diagnosis
+
+Implementasikan pipeline:
+
+1. Validasi jenis dan ukuran file.
+2. Periksa kualitas dan ketajaman gambar.
+3. Pastikan konteks komoditas tersedia.
+4. Minta informasi tambahan bila diperlukan.
+5. Kirim gambar melalui layanan backend yang aman.
+6. Jalankan analisis visual Gemini.
+7. Cocokkan temuan dengan basis pengetahuan agronomi.
+8. Nilai apakah hasil cukup kuat untuk ditampilkan sebagai dugaan diagnosis.
+9. Tampilkan kemungkinan penyebab dan informasi pendukung.
+10. Tampilkan langkah berikutnya sesuai tingkat kepastian.
+11. Simpan hasil setelah persetujuan pengguna.
+
+## Format hasil diagnosis
+
+Gunakan struktur data tervalidasi yang memuat:
+
+- Komoditas.
+- Bagian tanaman.
+- Gejala yang terlihat.
+- Kemungkinan penyebab.
+- Tingkat keyakinan model jika tersedia.
+- Bukti visual yang mendukung.
+- Diagnosis alternatif.
+- Informasi yang masih kurang.
+- Tingkat urgensi.
+- Langkah pemeriksaan lanjutan.
+- Opsi penanganan.
+- Referensi sumber.
+- Waktu analisis.
+- Status validasi rekomendasi.
+
+Jangan mengubah probabilitas model menjadi klaim kepastian ilmiah.
+
+Jika gambar buram, pencahayaan buruk, atau gejala tidak khas, minta pengguna mengambil foto baru.
+
+Jika penyebab dapat berupa penyakit, hama, defisiensi nutrisi, kerusakan kimia, atau stres lingkungan, tampilkan alternatif yang masuk akal dan pemeriksaan pembeda.
+
+Jika hasil tidak meyakinkan, jangan mengeluarkan rekomendasi kimia yang spesifik. Arahkan pengguna untuk mengumpulkan bukti tambahan atau berkonsultasi dengan penyuluh atau ahli tanaman.
+
+## Integrasi Gemini
+
+Gunakan API Gemini melalui backend.
+
+- Simpan API key dalam secret atau environment variable.
+- Pilih model yang benar-benar tersedia pada akun dan lingkungan saat implementasi.
+- Gunakan output JSON terstruktur bila model dan SDK mendukungnya.
+- Validasi output dengan schema.
+- Batasi ukuran gambar dan permintaan.
+- Tangani rate limit, timeout, respons tidak valid, dan gangguan layanan.
+- Gunakan retry terbatas hanya untuk kesalahan yang layak dicoba ulang.
+- Jangan menampilkan chain-of-thought atau proses penalaran internal model.
+- Tampilkan ringkasan alasan diagnosis yang dapat dipahami pengguna.
+- Simpan metadata model dan versi prompt untuk audit.
+- Jangan menjadikan jawaban AI sebagai satu-satunya sumber validasi pestisida.
+
+Buat interface provider AI agar model dapat diganti tanpa mengubah seluruh aplikasi.
+
+# 8. REKOMENDASI PESTISIDA DAN BAHAN AKTIF
+
+Modul ini harus dirancang dengan pengamanan paling ketat.
+
+Buat basis data referensi produk yang memuat:
+
+- Nama produk.
+- Pemegang pendaftaran atau produsen jika tersedia.
+- Nomor registrasi.
+- Status registrasi.
+- Komoditas yang diizinkan.
+- Organisme sasaran.
+- Bahan aktif.
+- Konsentrasi bahan aktif.
+- Formulasi.
+- Dosis dan satuan sesuai label.
+- Volume aplikasi jika tercantum.
+- Cara aplikasi.
+- APD.
+- Interval aplikasi.
+- Interval pra-panen.
+- Batasan penggunaan.
+- Peringatan keselamatan.
+- Sumber label.
+- Tanggal verifikasi.
+- Versi data.
+
+Hanya gunakan produk dan petunjuk penggunaan yang dapat diverifikasi dari label resmi atau sumber pemerintah yang berwenang.
+
+Jangan membuat nama produk, nomor registrasi, bahan aktif, konsentrasi, atau dosis fiktif.
+
+Jika belum ada integrasi sumber resmi, tampilkan status “Belum Terverifikasi” dan jangan menghasilkan dosis yang seolah-olah resmi.
+
+AI harus membedakan:
+- Dugaan diagnosis.
+- Rekomendasi pengendalian nonkimia.
+- Rekomendasi produk yang sudah diverifikasi.
+- Data yang masih memerlukan validasi.
+
+Jangan merekomendasikan pestisida hanya berdasarkan kemiripan foto. Periksa kecocokan komoditas, organisme sasaran, formulasi, label, dan konteks penggunaan.
+
+Jangan melakukan konversi dosis tanpa memperhatikan satuan label. Jangan menyamakan dosis per hektare dengan dosis per tangki.
+
+Jika informasi penting tidak tersedia, jangan mengarang dosis atau cara aplikasi.
+
+Tampilkan rekomendasi pengendalian terpadu, termasuk tindakan budidaya, sanitasi, pengelolaan air, pemantauan, dan metode nonkimia yang relevan.
+
+Untuk setiap rekomendasi kimia, tampilkan sumber dan tanggal verifikasi data. Berikan peringatan mengenai APD, cuaca, risiko terhadap organisme bukan sasaran, dan interval pra-panen sesuai label.
+
+Sediakan tombol “Lihat sumber”, “Simpan rekomendasi”, dan “Jadwalkan pemeriksaan ulang”.
+
+Jangan mengizinkan AI mengubah rekomendasi yang sudah terverifikasi tanpa proses validasi.
+
+# 9. MESIN KALENDER DAN PENGINGAT
+
+Bangun kalender yang otomatis dibuat berdasarkan data setiap musim tanam.
+
+Jenis kegiatan:
+
+- Persiapan lahan.
+- Persemaian.
+- Penanaman.
+- Pemupukan.
+- Pengairan.
+- Pemeriksaan gulma.
+- Pemeriksaan hama dan penyakit.
+- Penyemprotan apabila memang diperlukan dan telah divalidasi.
+- Pembungaan.
+- Pengisian gabah.
+- Pemeriksaan kematangan.
+- Panen.
+- Pascapanen.
+
+Fitur:
+
+- Tampilan hari, minggu, dan bulan.
+- Agenda hari ini.
+- Filter per lahan dan komoditas.
+- Pengingat sebelum jadwal.
+- Penandaan kegiatan selesai.
+- Penjadwalan ulang.
+- Catatan kegiatan.
+- Riwayat kegiatan terlewat.
+- Sinkronisasi perubahan.
+- Pengingat pemeriksaan ulang setelah tindakan pengendalian.
+
+Gunakan zona waktu `Asia/Jakarta` sebagai default, dengan kemampuan menyesuaikan zona waktu bila diperlukan.
+
+Jangan menjanjikan notifikasi background yang tidak didukung browser atau perangkat.
+
+Implementasikan notifikasi lokal jika didukung, serta push notification melalui backend jika layanan telah dikonfigurasi dan pengguna memberikan izin.
+
+Sediakan fallback berupa agenda dalam aplikasi dan sinkronisasi kalender bila didukung.
+
+Jadwal pemupukan atau penyemprotan tidak boleh dibuat hanya berdasarkan tanggal tetap. Gunakan fase tanaman, rekomendasi budidaya, kondisi aktual, dan hasil pemantauan.
+
+# 10. CUACA DAN KONDISI LAHAN
+
+Buat halaman cuaca yang mendukung lokasi lahan pengguna.
+
+Tampilkan data berikut hanya jika sumber tersedia:
+
+- Suhu.
+- Curah hujan.
+- Peluang hujan.
+- Kelembapan udara.
+- Kecepatan angin.
+- Perkiraan cuaca beberapa hari ke depan.
+- Waktu pembaruan data.
+- Sumber data.
+
+Gunakan API cuaca yang dapat dikonfigurasi melalui backend.
+
+Jangan menampilkan cuaca simulasi sebagai cuaca aktual.
+
+Jika API gagal, tampilkan waktu data terakhir dan pesan bahwa data terkini belum tersedia.
+
+Gunakan cuaca sebagai konteks pengambilan keputusan, bukan jaminan bahwa penyemprotan atau kegiatan tertentu pasti aman.
+
+Sediakan pencatatan manual untuk pH tanah, kelembapan tanah, suhu tanah, kondisi air, dan pengamatan lainnya.
+
+Bedakan dengan jelas data yang diukur sensor, dimasukkan pengguna, diperkirakan model, dan berasal dari API.
+
+Jangan mengklaim aplikasi dapat membaca pH tanah hanya dari kamera HP.
+
+# 11. KALKULATOR KEBUTUHAN DAN BIAYA
+
+Buat kalkulator untuk:
+
+- Kebutuhan benih.
+- Kebutuhan pupuk.
+- Kebutuhan bahan pengendali tanaman berdasarkan label yang tervalidasi.
+- Volume air.
+- Biaya tenaga kerja.
+- Biaya sewa alat.
+- Biaya pengolahan lahan.
+- Biaya transportasi.
+- Biaya panen.
+- Biaya pascapanen.
+- Estimasi hasil.
+- Pendapatan.
+- Laba atau rugi.
+
+Setiap kalkulator harus menampilkan input, satuan, rumus, hasil, dan asumsi yang digunakan.
+
+Gunakan satuan yang konsisten dan dukung konversi yang benar.
+
+Validasi nilai negatif, luas nol, satuan tidak cocok, serta input yang tidak masuk akal.
+
+Bedakan estimasi dari angka aktual.
+
+Pengguna harus dapat mengganti harga input sesuai wilayah dan pemasok.
+
+Jangan mengarang harga pasar. Jika tidak ada sumber harga aktual, sediakan input manual.
+
+# 12. ASISTEN AI PERTANIAN
+
+Buat asisten percakapan berbahasa Indonesia yang dapat menjawab pertanyaan tentang budidaya tanaman, pengelolaan lahan, dan interpretasi catatan pertanian.
+
+Asisten dapat menggunakan:
+- Profil lahan yang diizinkan pengguna.
+- Komoditas dan varietas.
+- Fase pertumbuhan.
+- Catatan kegiatan.
+- Hasil diagnosis.
+- Data cuaca jika tersedia.
+- Basis pengetahuan agronomi yang terverifikasi.
+
+Jawaban harus spesifik pada konteks, singkat ketika pertanyaan sederhana, dan lebih terperinci untuk masalah kompleks.
+
+Jangan mengarang hasil pengukuran, data lapangan, atau sumber referensi.
+
+Jika pertanyaan membutuhkan data yang tidak tersedia, jelaskan data yang diperlukan.
+
+Asisten tidak boleh memberikan dosis pestisida yang tidak terverifikasi. Untuk kasus berisiko tinggi, arahkan pengguna kepada penyuluh atau ahli pertanian.
+
+Buat tombol pertanyaan cepat seperti:
+
+- “Apa yang harus saya lakukan hari ini?”
+- “Periksa kondisi tanaman saya.”
+- “Mengapa daun padi menguning?”
+- “Kapan perkiraan panen saya?”
+- “Berapa kebutuhan pupuk untuk lahan saya?”
+- “Tampilkan kegiatan yang terlambat.”
+
+# 13. PANDUAN DAN BASIS PENGETAHUAN MULTI-KOMODITAS
+
+Buat struktur pengetahuan yang dapat diperluas untuk:
+
+1. Padi.
+2. Jagung.
+3. Kedelai.
+4. Cabai.
+5. Bawang merah.
+6. Bawang putih.
+7. Tomat.
+8. Kentang.
+9. Terung.
+10. Mentimun.
+11. Berbagai sayuran.
+12. Pisang.
+13. Mangga.
+14. Jeruk.
+15. Kelapa.
+16. Kopi.
+17. Kakao.
+18. Tebu.
+19. Singkong.
+20. Komoditas lain melalui sistem modul.
+
+Padi menjadi modul pertama dengan cakupan budidaya paling mendalam.
+
+Setiap modul komoditas memiliki:
+
+- Tahapan pertumbuhan.
+- Kebutuhan lingkungan.
+- Rekomendasi varietas.
+- Kebutuhan air.
+- Pemupukan.
+- Hama dan penyakit.
+- Gulma.
+- Pengendalian terpadu.
+- Estimasi panen.
+- Pascapanen.
+- Referensi sumber.
+
+Jangan menganggap rekomendasi padi otomatis berlaku untuk jagung atau komoditas lain.
+
+Gunakan skema data umum dengan modul pengetahuan spesifik setiap tanaman.
+
+Sediakan metadata sumber, wilayah berlaku, tanggal pembaruan, dan tingkat keandalan setiap referensi.
+
+# 14. MODE OFFLINE DAN KONEKSI LEMAH
+
+Aplikasi harus dirancang dengan pendekatan offline-first.
+
+Fitur offline:
+
+- Membuka dashboard dari data tersimpan.
+- Melihat profil dan lahan yang sudah disinkronkan.
+- Membuka panduan yang sudah disimpan.
+- Membuka kalender budidaya.
+- Membuat catatan kegiatan.
+- Mencatat biaya dan hasil panen.
+- Menyimpan foto secara lokal bila penyimpanan tersedia.
+- Melihat riwayat diagnosis yang telah tersimpan.
+- Mengantrekan perubahan untuk sinkronisasi.
+
+Gunakan IndexedDB untuk penyimpanan data lokal yang sesuai.
+
+Gunakan Service Worker untuk cache aset aplikasi dan mekanisme PWA.
+
+Sediakan indikator:
+- Online.
+- Offline.
+- Menunggu sinkronisasi.
+- Sinkronisasi berlangsung.
+- Sinkronisasi gagal.
+- Data lokal belum dicadangkan.
+
+Terapkan strategi sinkronisasi yang jelas, termasuk identitas transaksi, penanganan konflik, retry terbatas, dan pencegahan duplikasi.
+
+Jangan menimpa perubahan pengguna secara diam-diam.
+
+Diagnosis AI berbasis cloud tidak akan berjalan tanpa koneksi. Jika tersedia model lokal yang kompatibel, implementasikan sebagai fitur tambahan dengan penjelasan keterbatasannya.
+
+Jangan menjanjikan seluruh fitur AI bekerja offline jika modelnya belum tersedia di perangkat.
+
+# 15. LAPORAN DAN ANALITIK
+
+Buat halaman laporan per lahan dan per musim tanam.
+
+Tampilkan:
+
+- Luas tanam.
+- Tanggal tanam.
+- Durasi budidaya.
+- Kegiatan yang sudah dilakukan.
+- Kegiatan yang belum dilakukan.
+- Riwayat pemupukan.
+- Riwayat pengendalian hama dan penyakit.
+- Total biaya.
+- Kebutuhan input.
+- Hasil panen aktual.
+- Estimasi hasil sebelum panen.
+- Pendapatan.
+- Laba atau rugi.
+- Perbandingan antarmusim.
+
+Sediakan grafik yang mudah dibaca dan tabel ringkas.
+
+Tambahkan ekspor PDF dan CSV bila memungkinkan.
+
+Laporan harus dihitung dari data yang tersimpan, bukan angka contoh yang di-hardcode.
+
+# 16. STRUKTUR DATABASE
+
+Rancang skema database yang memiliki relasi jelas dan dapat berkembang.
+
+Entitas minimal:
+
+- users
+- user_preferences
+- farms
+- plots
+- crop_catalog
+- crop_varieties
+- growing_seasons
+- growth_stages
+- cultivation_plans
+- tasks
+- reminders
+- activity_logs
+- observations
+- diagnosis_sessions
+- diagnosis_results
+- agronomy_knowledge
+- pesticide_products
+- pesticide_labels
+- treatment_recommendations
+- fertilizer_products
+- input_inventory
+- expense_records
+- harvest_records
+- weather_snapshots
+- notifications
+- source_references
+- synchronization_logs
+- audit_logs
+
+Setiap entitas harus memiliki ID unik, timestamp yang sesuai, dan relasi yang benar.
+
+Gunakan validasi skema, indeks untuk pencarian yang diperlukan, dan aturan akses data.
+
+Pengguna hanya boleh membaca atau mengubah data yang memang menjadi haknya.
+
+Jangan menganggap validasi frontend cukup untuk keamanan.
+
+Buat migrasi atau mekanisme perubahan skema yang aman bila database yang dipilih mendukungnya.
+
+# 17. KEAMANAN DAN PRIVASI
+
+Implementasikan:
+
+- Autentikasi yang benar.
+- Otorisasi setiap operasi.
+- Validasi data pada server.
+- Proteksi terhadap input berbahaya.
+- Pembatasan ukuran dan tipe file.
+- Rate limiting untuk endpoint sensitif.
+- Penanganan error tanpa membocorkan secret.
+- Kebijakan penyimpanan foto.
+- Penghapusan data pengguna.
+- Pembatasan akses berdasarkan pemilik lahan.
+- Pengelolaan secret melalui environment variables.
+- Audit untuk perubahan data penting.
+- Persetujuan pengguna sebelum foto dikirim ke layanan eksternal.
+
+Jangan menampilkan kredensial, token, atau data pribadi dalam log frontend.
+
+Jangan mengirim seluruh data pengguna ke AI jika hanya sebagian yang diperlukan.
+
+Sediakan penjelasan privasi yang mudah dipahami.
+
+# 18. DESAIN KOMPONEN REUSABLE
+
+Buat komponen yang konsisten, misalnya:
+
+- AppShell
+- BottomNavigation
+- DashboardHeader
+- FarmCard
+- CropStatusCard
+- TaskCard
+- WeatherCard
+- GrowthTimeline
+- CameraCapture
+- ImageQualityChecker
+- DiagnosisSummary
+- ConfidenceIndicator
+- VerifiedTreatmentCard
+- ProductLabelDetails
+- DoseCalculator
+- CalendarView
+- OfflineStatus
+- SyncStatus
+- EmptyState
+- ErrorState
+- LoadingSkeleton
+- ConfirmationDialog
+- SearchBar
+- FilterSheet
+- ToastNotification
+- FormField
+- ReportChart
+
+Komponen harus memiliki props dan tipe data yang jelas.
+
+Jangan menduplikasi logika yang sama pada banyak halaman.
+
+# 19. PERFORMA DAN PENGALAMAN PENGGUNA
+
+Targetkan pengalaman yang terasa cepat, walaupun jaringan lambat.
+
+Implementasikan:
+
+- Code splitting.
+- Lazy loading halaman berat.
+- Optimasi gambar.
+- Cache aset.
+- Query data yang efisien.
+- Pagination jika diperlukan.
+- Debounce pencarian.
+- Pengurangan render yang tidak diperlukan.
+- Pengelolaan state yang konsisten.
+- Pembatalan request ketika relevan.
+- Penanganan timeout.
+- Retry terbatas.
+- Feedback progres yang jujur.
+- Penyimpanan lokal untuk data yang sering diakses.
+
+Jangan mengunci seluruh aplikasi ketika satu permintaan AI sedang berjalan.
+
+Pengguna harus tetap dapat melihat kalender atau mengelola catatan selama analisis gambar berlangsung, selama operasi tidak saling bertentangan.
+
+Jangan mengklaim zero loading secara literal. Prioritaskan respons cepat, cache, dan tampilan progres yang baik.
+
+# 20. PENGUJIAN DAN QUALITY ASSURANCE
+
+Buat dan jalankan pengujian yang sesuai dengan lingkungan proyek.
+
+Pengujian wajib mencakup:
+
+- Build dan pemeriksaan TypeScript.
+- Navigasi setiap halaman.
+- Login dan logout.
+- Validasi formulir.
+- CRUD lahan.
+- CRUD musim tanam.
+- Perhitungan kebutuhan input.
+- Perhitungan biaya dan pendapatan.
+- Pembuatan jadwal.
+- Penandaan kegiatan selesai.
+- Penyimpanan data lokal.
+- Pemulihan data setelah aplikasi dibuka kembali.
+- Sinkronisasi data.
+- Penanganan konflik.
+- Upload dan validasi gambar.
+- Penanganan respons AI yang tidak valid.
+- Penanganan API gagal.
+- Hak akses database.
+- Mode offline.
+- Responsivitas di HP.
+- Aksesibilitas dan keterbacaan.
+
+Buat unit test untuk fungsi perhitungan dan validasi yang kritis.
+
+Buat integration test untuk alur penyimpanan dan layanan utama jika lingkungan mendukungnya.
+
+Jangan menyatakan pengujian berhasil jika belum dijalankan.
+
+Perbaiki error yang ditemukan sebelum menyatakan tahap implementasi selesai.
+
+# 21. KRITERIA PENERIMAAN
+
+Aplikasi dianggap memenuhi tahap implementasi awal apabila:
+
+1. Pengguna dapat membuka aplikasi dan menavigasi seluruh halaman utama.
+2. Pengguna dapat membuat lahan dan musim tanam.
+3. Data tersimpan secara persisten.
+4. Kalender dapat dibuat dari tanggal dan fase pertumbuhan.
+5. Pengguna dapat mencatat kegiatan dan biaya.
+6. Perhitungan memberikan hasil yang konsisten dengan rumus dan satuannya.
+7. Kamera atau pemilih gambar dapat mengambil sampel.
+8. Integrasi Gemini benar-benar berjalan setelah API key dikonfigurasi.
+9. Hasil AI divalidasi dan memiliki penanganan ketidakpastian.
+10. Rekomendasi pestisida tidak mengarang data resmi atau dosis.
+11. Pengingat menggunakan mekanisme yang didukung perangkat.
+12. Mode offline mendukung fitur yang memang telah diimplementasikan.
+13. Sinkronisasi tidak menghapus data pengguna secara diam-diam.
+14. Data pengguna dilindungi oleh autentikasi dan aturan akses.
+15. Tampilan responsif dan dapat digunakan di layar HP kecil.
+16. Tidak ada tombol utama yang hanya bersifat dekoratif.
+17. Error dan keterbatasan layanan ditampilkan secara jujur.
+18. Build dan pengujian yang tersedia selesai tanpa error yang belum ditangani.
+
+# 22. TAHAPAN IMPLEMENTASI
+
+Bangun aplikasi secara bertahap, tetapi pertahankan proyek dan arsitektur yang sama.
+
+**Tahap 1 — Fondasi aplikasi**
+- Struktur proyek.
+- Desain sistem.
+- Navigasi.
+- Dashboard.
+- Komponen UI.
+- Login.
+- Profil.
+- Database.
+
+**Tahap 2 — Pengelolaan pertanian**
+- Lahan.
+- Komoditas.
+- Varietas.
+- Musim tanam.
+- Fase pertumbuhan.
+- Kalender.
+- Pengingat.
+- Catatan kegiatan.
+
+**Tahap 3 — AI dan agronomi**
+- Integrasi Gemini.
+- Kamera.
+- Analisis gambar.
+- Basis pengetahuan.
+- Validasi hasil.
+- Rekomendasi pengendalian.
+- Referensi label produk.
+
+**Tahap 4 — Data dan analitik**
+- Cuaca.
+- Kalkulator kebutuhan.
+- Biaya.
+- Inventaris.
+- Hasil panen.
+- Laporan.
+
+**Tahap 5 — Offline dan keamanan**
+- PWA.
+- IndexedDB.
+- Service Worker.
+- Sinkronisasi.
+- Aturan akses.
+- Audit.
+- Penanganan konflik.
+
+**Tahap 6 — Pengujian dan penyempurnaan**
+- Pengujian fungsi.
+- Perbaikan error.
+- Responsivitas.
+- Aksesibilitas.
+- Optimasi performa.
+- Dokumentasi.
+
+Jangan berhenti setelah menyelesaikan tahap 1. Lanjutkan sejauh kemampuan lingkungan memungkinkan. Jika perlu melanjutkan dalam beberapa iterasi, pertahankan struktur kode, daftar tugas, dan status implementasi.
+
+# 23. INSTRUKSI AKHIR KEPADA AI STUDIO
+
+Mulailah dengan menganalisis kebutuhan, memilih arsitektur yang kompatibel, dan membuat struktur proyek.
+
+Kemudian langsung bangun aplikasi dengan antarmuka yang menarik dan fitur nyata.
+
+Prioritaskan alur berikut agar dapat diuji dari ujung ke ujung:
+
+1. Pengguna membuka aplikasi.
+2. Pengguna menambahkan lahan.
+3. Pengguna memilih tanaman padi dan varietas.
+4. Pengguna memasukkan tanggal tanam.
+5. Aplikasi membuat rencana budidaya dan kalender awal.
+6. Pengguna mencatat kegiatan.
+7. Pengguna memotret gejala tanaman.
+8. Aplikasi menganalisis gambar melalui Gemini.
+9. Aplikasi menampilkan kemungkinan diagnosis, keterbatasan hasil, dan langkah berikutnya.
+10. Jika tersedia produk yang terverifikasi dan sesuai, aplikasi menampilkan detail label dan rekomendasi yang relevan.
+11. Pengguna mencatat tindakan dan menjadwalkan pemeriksaan ulang.
+12. Pengguna mencatat panen dan melihat laporan biaya serta hasil.
+
+Gunakan data demo hanya untuk pengembangan dan beri label “DATA DEMO”. Jangan mencampur data demo dengan data produksi.
+
+Jika integrasi memerlukan API key, akun layanan, atau konfigurasi eksternal yang belum tersedia, buat petunjuk konfigurasi yang jelas dan pertahankan aplikasi agar bagian lain tetap dapat diuji.
+
+Sediakan README yang berisi:
+- Arsitektur.
+- Struktur direktori.
+- Cara menjalankan aplikasi.
+- Konfigurasi environment variables.
+- Cara menghubungkan Gemini.
+- Cara menghubungkan database.
+- Cara mengaktifkan autentikasi.
+- Cara mengaktifkan notifikasi.
+- Cara menguji fitur.
+- Cara membangun dan melakukan deployment.
+- Batasan fitur yang belum terintegrasi.
+
+Jangan mengganti implementasi yang benar dengan simulasi hanya agar tampilan terlihat lengkap.
+
+Jangan mengklaim aplikasi siap produksi sebelum pemeriksaan keamanan, validasi data, pengujian, dan konfigurasi layanan selesai.
+
+**HASIL YANG SAYA INGINKAN:** aplikasi TaniCerdas AI yang memiliki desain premium, arsitektur bersih, mobile-first, responsif, mudah digunakan, cepat, aman, dapat dikembangkan, dan benar-benar membantu petani Indonesia dalam mengambil keputusan budidaya berbasis data.
+
+Mulai implementasi sekarang. Bangun aplikasi secara nyata, periksa hasilnya, perbaiki masalah yang ditemukan, dan jelaskan bagian yang sudah berfungsi serta bagian yang masih memerlukan konfigurasi atau validasi lapangan.
